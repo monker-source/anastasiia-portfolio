@@ -47,7 +47,11 @@ if (section) {
     const clones = templateItems.map((item) => {
       const clone = item.cloneNode(true);
       clone.querySelectorAll("img").forEach((img) => {
-        img.loading = "lazy";
+        // Keep slideshow frames eager so the first flip never waits on decode
+        img.loading = clone.matches("[data-slideshow], .slideshow") ||
+          clone.classList.contains("slideshow")
+          ? "eager"
+          : "lazy";
       });
       // Reset slideshow active state
       const slides = clone.querySelectorAll(".slideshow__slide");

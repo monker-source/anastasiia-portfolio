@@ -115,11 +115,29 @@
 
 .slideshow__slide {
   margin: 0;
-  display: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .slideshow__slide.is-active {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Before aspect-ratio is known, keep the first slide in flow for height */
+.slideshow:not(.is-sized) .slideshow__slide.is-active {
+  position: relative;
+}
+
+.slideshow.is-sized .slideshow__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .slideshow__bar {

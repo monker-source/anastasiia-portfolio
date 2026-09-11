@@ -10,6 +10,50 @@ function pad2(n) {
   return String(n).padStart(2, "0");
 }
 
+function preloadSlideImages(root) {
+  const imgs = [...root.querySelectorAll(".slideshow__slide img")];
+  imgs.forEach((img) => {
+    img.loading = "eager";
+    img.decoding = "async";
+    if (!img.complete && img.src) {
+      const warm = new Image();
+      warm.src = img.currentSrc || img.src;
+    }
+  });
+  return Promise.all(
+    imgs.map(
+      (img) =>
+        img.decode?.().catch(() => {}) ||
+        (img.complete
+          ? Promise.resolve()
+          : new Promise((resolve) => {
+              img.addEventListener("load", resolve, { once: true });
+              img.addEventListener("error", resolve, { once: true });
+            }))
+    )
+  );
+}
+
+function lockViewportAspect(root) {
+  const viewport = root.querySelector(".slideshow__viewport");
+  const probe =
+    root.querySelector(".slideshow__slide.is-active img") ||
+    root.querySelector(".slideshow__slide img");
+  if (!viewport || !probe) return;
+
+  const apply = () => {
+    const w = probe.naturalWidth;
+    const h = probe.naturalHeight;
+    if (w > 0 && h > 0) {
+      viewport.style.aspectRatio = `${w} / ${h}`;
+      root.classList.add("is-sized");
+    }
+  };
+
+  if (probe.complete && probe.naturalWidth) apply();
+  else probe.addEventListener("load", apply, { once: true });
+}
+
 export function initSlideshow(root) {
   if (!root || initialized.has(root)) return;
   const slides = [...root.querySelectorAll(".slideshow__slide")];
@@ -63,6 +107,8 @@ export function initSlideshow(root) {
 
   root.tabIndex = 0;
   root.classList.add("is-ready");
+  lockViewportAspect(root);
+  preloadSlideImages(root).then(() => lockViewportAspect(root));
   render();
 }
 
