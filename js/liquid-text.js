@@ -7,24 +7,19 @@
  */
 import * as THREE from "three";
 
-const BIO =
-  "Anastasiia Bulatova (b. 1997) is a performance artist and researcher whose work investigates the body at the intersection of digital infrastructure, political power, and spatial control. Working across live performance, video, and installation, their practice examines how bodies are rendered, mediated, and disciplined by both physical architecture and algorithmic systems.";
-
-const CONTACT_EMAIL = "anastasiiaabulatova@gmail.com";
-const CONTACT_PHONE = "+1 (608) 515-7994";
-
 const CONFIG = {
-  radius: 0.12,
-  distortion: 0.22,
-  noiseScale: 5.7,
-  speed: 0.12,
-  edgeSoftness: 0.05,
-  refraction: 0.11,
-  parallax: 0.02,
+  radius: 0.17,
+  distortion: 0.2,
+  noiseScale: 4.8,
+  speed: 0.1,
+  edgeSoftness: 0.065,
+  refraction: 0.16,
+  magnify: 1.1,
+  parallax: 0.025,
   mouseSmoothness: 0.08,
-  trailLength: 1.05,
-  trailPersistence: 0.55,
-  trailTaper: 0.86,
+  trailLength: 1.0,
+  trailPersistence: 0.28,
+  trailTaper: 0.82,
   idleDelay: 2.0,
   fadeDuration: 0.3,
   fadeOutDuration: 0.55,
@@ -32,7 +27,10 @@ const CONFIG = {
   ink: "#0a0a0a",
 };
 
-const TRAIL_COUNT = 12;
+const TRAIL_COUNT = 6;
+const TRAIL_SEGMENTS = TRAIL_COUNT - 1;
+const SCENE_DPR_CAP = 1.5;
+const SCROLL_DIRTY_MS = 40;
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -60,32 +58,13 @@ function wrapLines(ctx, text, maxWidth) {
   return lines;
 }
 
-function measureFontSize(ctx, text, maxWidth, maxHeight, padding) {
-  const availW = maxWidth - padding * 2;
-  const availH = maxHeight - padding * 2;
-  let lo = 16;
-  let hi = Math.min(120, availW * 0.12);
-  let best = lo;
-
-  while (lo <= hi) {
-    const mid = (lo + hi) / 2;
-    ctx.font = `400 ${mid}px Arial, Helvetica, sans-serif`;
-    const lines = wrapLines(ctx, text, availW);
-    const lineHeight = mid * 1.12;
-    const blockH = lines.length * lineHeight;
-    if (blockH <= availH) {
-      best = mid;
-      lo = mid + 0.5;
-    } else {
-      hi = mid - 0.5;
-    }
-  }
-  return best;
-}
-
 function cssPx(value, fallback) {
   const n = parseFloat(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function fontStack(style) {
+  return style.fontFamily || "Arial, Helvetica, sans-serif";
 }
 
 /** Parse SVG path in 0–100 space into canvas Path2D scaled to a rect */
@@ -132,7 +111,7 @@ function drawImageCover(ctx, img, dx, dy, dw, dh) {
   ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
-function paintWrappedElement(ctx, el, shiftX, shiftY) {
+function paintWrappedElement(ctx, el) {
   if (!el) return;
   const style = getComputedStyle(el);
   if (style.display === "none" || style.visibility === "hidden") return;
@@ -151,20 +130,49 @@ function paintWrappedElement(ctx, el, shiftX, shiftY) {
 
   const weight = style.fontWeight || "400";
   ctx.fillStyle = CONFIG.ink;
-  ctx.font = `${weight} ${fontSize}px Arial, Helvetica, sans-serif`;
+  ctx.font = `${weight} ${fontSize}px ${fontStack(style)}`;
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
 
   const lines = wrapLines(ctx, text, maxW);
-  let y = rect.top + padT + shiftY;
-  const x = rect.left + padL + shiftX;
+  let y = rect.top + padT;
+  const x = rect.left + padL;
   for (const line of lines) {
     ctx.fillText(line, x, y);
     y += lineHeight;
   }
 }
 
-function paintProjectMedia(ctx, width, height, shiftX, shiftY) {
+function paintContactLink(ctx, contactEl) {
+  if (!contactEl) return;
+  const style = getComputedStyle(contactEl);
+  if (style.display === "none" || style.visibility === "hidden") return;
+
+  const link = contactEl.querySelector("a");
+  if (!link) return;
+
+  const lr = link.getBoundingClientRect();
+  if (lr.bottom < -40 || lr.top > window.innerHeight + 40) return;
+
+  const size = cssPx(style.fontSize, 12);
+  const weight = style.fontWeight || "400";
+  const alignRight = contactEl.classList.contains("contact--phone");
+  const alignCenter = contactEl.classList.contains("contact--cv");
+
+  ctx.fillStyle = CONFIG.ink;
+  ctx.font = `${weight} ${size}px ${fontStack(style)}`;
+  ctx.textAlign = alignRight ? "right" : alignCenter ? "center" : "left";
+  ctx.textBaseline = "top";
+
+  const x = alignRight
+    ? lr.right
+    : alignCenter
+      ? lr.left + lr.width / 2
+      : lr.left;
+  ctx.fillText(link.textContent.trim(), x, lr.top);
+}
+
+function paintProjectMedia(ctx, width, height) {
   const items = document.querySelectorAll(
     ".project-media .project-figure, .project-media .slideshow"
   );
@@ -187,16 +195,11 @@ function paintProjectMedia(ctx, width, height, shiftX, shiftY) {
     if (br.bottom < -40 || br.top > height + 40) return;
     if (br.right < -40 || br.left > width + 40) return;
 
-    ctx.save();
-    ctx.translate(shiftX, shiftY);
     drawImageCover(ctx, img, br.left, br.top, br.width, br.height);
-    ctx.restore();
   });
 }
 
-function paintScene(ctx, width, height, options = {}) {
-  const { scale = 1, shiftX = 0, shiftY = 0 } = options;
-
+function paintScene(ctx, width, height, scale = 1) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -204,75 +207,14 @@ function paintScene(ctx, width, height, options = {}) {
   ctx.fillStyle = CONFIG.bg;
   ctx.fillRect(0, 0, width, height);
 
-  const contactEls = [
-    document.getElementById("contact-email"),
-    document.getElementById("contact-cv"),
-    document.getElementById("contact-phone"),
-  ].filter(Boolean);
-  const bioEl = document.getElementById("bio-text");
+  paintContactLink(ctx, document.getElementById("contact-email"));
+  paintContactLink(ctx, document.getElementById("contact-cv"));
+  paintContactLink(ctx, document.getElementById("contact-phone"));
 
-  contactEls.forEach((contactEl) => {
-    const cs = getComputedStyle(contactEl);
-    const size = cssPx(cs.fontSize, 12);
-    const link = contactEl.querySelector("a");
-    if (!link) return;
-    const lr = link.getBoundingClientRect();
-    const alignRight = contactEl.classList.contains("contact--phone");
-    const alignCenter = contactEl.classList.contains("contact--cv");
-    ctx.fillStyle = CONFIG.ink;
-    ctx.font = `400 ${size}px Arial, Helvetica, sans-serif`;
-    ctx.textAlign = alignRight ? "right" : alignCenter ? "center" : "left";
-    ctx.textBaseline = "top";
-    const x = alignRight
-      ? lr.right
-      : alignCenter
-        ? lr.left + lr.width / 2
-        : lr.left;
-    ctx.fillText(link.textContent.trim(), x + shiftX, lr.top + shiftY);
-  });
-
-  if (bioEl) {
-    const bs = getComputedStyle(bioEl);
-    const br = bioEl.getBoundingClientRect();
-    const fontSize = cssPx(bs.fontSize, 32);
-    const lineHeight = cssPx(bs.lineHeight, fontSize * 1.12);
-    const padL = cssPx(bs.paddingLeft, 20);
-    const padT = cssPx(bs.paddingTop, 20);
-    const maxW = br.width - padL - cssPx(bs.paddingRight, 20);
-
-    ctx.fillStyle = CONFIG.ink;
-    ctx.font = `400 ${fontSize}px Arial, Helvetica, sans-serif`;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-
-    const lines = wrapLines(ctx, BIO, maxW);
-    let y = br.top + padT + shiftY;
-    const x = br.left + padL + shiftX;
-    for (const line of lines) {
-      ctx.fillText(line, x, y);
-      y += lineHeight;
-    }
-  }
-
-  // Project page fixed copy
-  paintWrappedElement(
-    ctx,
-    document.getElementById("project-title"),
-    shiftX,
-    shiftY
-  );
-  paintWrappedElement(
-    ctx,
-    document.getElementById("project-subhead"),
-    shiftX,
-    shiftY
-  );
-  paintWrappedElement(
-    ctx,
-    document.getElementById("project-body"),
-    shiftX,
-    shiftY
-  );
+  paintWrappedElement(ctx, document.getElementById("bio-text"));
+  paintWrappedElement(ctx, document.getElementById("project-title"));
+  paintWrappedElement(ctx, document.getElementById("project-subhead"));
+  paintWrappedElement(ctx, document.getElementById("project-body"));
 
   const previews = document.querySelectorAll(".preview");
   previews.forEach((preview) => {
@@ -294,10 +236,7 @@ function paintScene(ctx, width, height, options = {}) {
     const local = { left: 0, top: 0, width: fw, height: fh };
 
     ctx.save();
-    ctx.translate(
-      br.left + br.width / 2 + shiftX,
-      br.top + br.height / 2 + shiftY
-    );
+    ctx.translate(br.left + br.width / 2, br.top + br.height / 2);
     ctx.rotate((rot * Math.PI) / 180);
     ctx.translate(-fw / 2, -fh / 2);
 
@@ -308,7 +247,7 @@ function paintScene(ctx, width, height, options = {}) {
     ctx.restore();
   });
 
-  paintProjectMedia(ctx, width, height, shiftX, shiftY);
+  paintProjectMedia(ctx, width, height);
 }
 
 async function waitForFonts() {
@@ -346,6 +285,8 @@ async function init() {
     () => new THREE.Vector2(0.5, 0.5)
   );
 
+  const dprCap = Math.min(window.devicePixelRatio || 1, SCENE_DPR_CAP);
+
   const renderer = new THREE.WebGLRenderer({
     canvas: canvasEl,
     antialias: false,
@@ -353,7 +294,7 @@ async function init() {
     premultipliedAlpha: false,
   });
   renderer.setClearColor(0x000000, 0);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(dprCap);
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -361,22 +302,16 @@ async function init() {
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
   camera.position.z = 1;
 
-  const outerCanvas = document.createElement("canvas");
-  const innerCanvas = document.createElement("canvas");
-  const outerCtx = outerCanvas.getContext("2d", { willReadFrequently: false });
-  const innerCtx = innerCanvas.getContext("2d", { willReadFrequently: false });
-
-  let outerTex = createTextureFromCanvas(outerCanvas);
-  let innerTex = createTextureFromCanvas(innerCanvas);
+  const sceneCanvas = document.createElement("canvas");
+  const sceneCtx = sceneCanvas.getContext("2d", { willReadFrequently: false });
+  const sceneTex = createTextureFromCanvas(sceneCanvas);
 
   const uniforms = {
-    u_imageOuter: { value: outerTex },
-    u_imageInner: { value: innerTex },
+    u_image: { value: sceneTex },
     u_resolution: {
       value: new THREE.Vector2(window.innerWidth, window.innerHeight),
     },
-    u_imageOuterRes: { value: new THREE.Vector2(1, 1) },
-    u_imageInnerRes: { value: new THREE.Vector2(1, 1) },
+    u_imageRes: { value: new THREE.Vector2(1, 1) },
     u_mouse: { value: new THREE.Vector2(0.5, 0.5) },
     u_time: { value: 0 },
     u_visibility: { value: 0 },
@@ -389,6 +324,7 @@ async function init() {
     u_speed: { value: CONFIG.speed },
     u_edgeSoftness: { value: CONFIG.edgeSoftness },
     u_refraction: { value: CONFIG.refraction },
+    u_magnify: { value: CONFIG.magnify },
     u_parallax: { value: CONFIG.parallax },
   };
 
@@ -401,16 +337,14 @@ async function init() {
   `;
 
   const fragmentShader = `
-    uniform sampler2D u_imageOuter;
-    uniform sampler2D u_imageInner;
+    uniform sampler2D u_image;
     uniform vec2 u_resolution;
-    uniform vec2 u_imageOuterRes;
-    uniform vec2 u_imageInnerRes;
+    uniform vec2 u_imageRes;
 
     uniform vec2 u_mouse;
     uniform float u_time;
     uniform float u_visibility;
-    uniform vec2 u_trail[12];
+    uniform vec2 u_trail[${TRAIL_COUNT}];
     uniform float u_trailLength;
     uniform float u_trailTaper;
 
@@ -420,6 +354,7 @@ async function init() {
     uniform float u_speed;
     uniform float u_edgeSoftness;
     uniform float u_refraction;
+    uniform float u_magnify;
     uniform float u_parallax;
 
     varying vec2 vUv;
@@ -445,7 +380,7 @@ async function init() {
       float v = 0.0;
       float a = 0.5;
       mat2 rot = mat2(0.87, -0.48, 0.48, 0.87);
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 2; i++) {
         v += a * noise(p);
         p = rot * p * 2.0;
         a *= 0.5;
@@ -495,11 +430,11 @@ async function init() {
       float n = fbm(p * u_noiseScale + u_time * u_speed);
 
       vec3 liquidField = vec3(length(p) - u_radius, p / max(length(p), 0.00001));
-      for (int i = 0; i < 11; i++) {
+      for (int i = 0; i < ${TRAIL_SEGMENTS}; i++) {
         vec2 a = (u_trail[i] - u_mouse) * aspect * u_trailLength;
         vec2 b = (u_trail[i + 1] - u_mouse) * aspect * u_trailLength;
-        float ra = u_radius * (1.0 - u_trailTaper * float(i) / 11.0);
-        float rb = u_radius * (1.0 - u_trailTaper * float(i + 1) / 11.0);
+        float ra = u_radius * (1.0 - u_trailTaper * float(i) / float(${TRAIL_SEGMENTS}));
+        float rb = u_radius * (1.0 - u_trailTaper * float(i + 1) / float(${TRAIL_SEGMENTS}));
         vec3 segmentField = taperedCapsule(p, a, b, ra, rb);
         float blendWidth = u_radius * 0.12 * smoothstep(0.0, u_radius * 0.15, length(b - a));
         liquidField = mergeFields(liquidField, segmentField, blendWidth);
@@ -509,14 +444,18 @@ async function init() {
       float mask = 1.0 - smoothstep(-u_edgeSoftness, u_edgeSoftness, field);
       float edgeProfile = smoothstep(0.0, 0.5, mask) * (1.0 - smoothstep(0.5, 1.0, mask));
       vec2 refractionDir = liquidField.yz;
-      vec2 finalUvOffset = refractionDir * edgeProfile * u_refraction * u_visibility;
+      vec2 rimOffset = refractionDir * edgeProfile * u_refraction * u_visibility;
 
-      vec2 outerUv = getCoverUv(vUv + finalUvOffset, u_resolution, u_imageOuterRes);
-      vec4 colOuter = texture2D(u_imageOuter, outerUv);
+      // Enlarge content under the lens (zoom UV around pointer)
+      float zoom = mix(1.0, u_magnify, mask * u_visibility);
+      vec2 magnifiedUv = u_mouse + (vUv - u_mouse) / max(zoom, 0.0001);
 
-      vec2 parallaxOffset = (u_mouse - 0.5) * u_parallax;
-      vec2 innerUv = getCoverUv(vUv - finalUvOffset, u_resolution, u_imageInnerRes) + parallaxOffset;
-      vec4 colInner = texture2D(u_imageInner, innerUv);
+      // Optical rim: dual sample with opposite refraction (single texture)
+      vec2 parallaxOffset = (u_mouse - 0.5) * u_parallax * mask * u_visibility;
+      vec2 outerUv = getCoverUv(magnifiedUv + rimOffset, u_resolution, u_imageRes);
+      vec2 innerUv = getCoverUv(magnifiedUv - rimOffset, u_resolution, u_imageRes) + parallaxOffset;
+      vec4 colOuter = texture2D(u_image, outerUv);
+      vec4 colInner = texture2D(u_image, innerUv);
 
       vec3 finalRgb = mix(colOuter.rgb, colInner.rgb, mask * u_visibility);
       float alpha = mask * u_visibility;
@@ -536,39 +475,31 @@ async function init() {
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
   scene.add(mesh);
 
-  function resizeSceneCanvases(w, h, dpr) {
+  function resizeSceneCanvas(w, h, dpr) {
     const bw = Math.max(1, Math.floor(w * dpr));
     const bh = Math.max(1, Math.floor(h * dpr));
-    if (outerCanvas.width !== bw || outerCanvas.height !== bh) {
-      outerCanvas.width = bw;
-      outerCanvas.height = bh;
-      innerCanvas.width = bw;
-      innerCanvas.height = bh;
+    if (sceneCanvas.width !== bw || sceneCanvas.height !== bh) {
+      sceneCanvas.width = bw;
+      sceneCanvas.height = bh;
     }
   }
 
-  function rebuildSceneTextures() {
+  function rebuildSceneTexture() {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    resizeSceneCanvases(w, h, dpr);
+    const dpr = Math.min(window.devicePixelRatio || 1, SCENE_DPR_CAP);
+    resizeSceneCanvas(w, h, dpr);
 
-    paintScene(outerCtx, w, h, { scale: dpr });
-    paintScene(innerCtx, w, h, {
-      scale: dpr,
-      shiftX: -1.5,
-      shiftY: -1,
-    });
+    paintScene(sceneCtx, w, h, dpr);
 
-    outerTex.needsUpdate = true;
-    innerTex.needsUpdate = true;
-    uniforms.u_imageOuterRes.value.set(outerCanvas.width, outerCanvas.height);
-    uniforms.u_imageInnerRes.value.set(innerCanvas.width, innerCanvas.height);
+    sceneTex.needsUpdate = true;
+    uniforms.u_imageRes.value.set(sceneCanvas.width, sceneCanvas.height);
     uniforms.u_resolution.value.set(w, h);
+    renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
   }
 
-  rebuildSceneTextures();
+  rebuildSceneTexture();
   document.body.classList.add("has-liquid-cursor");
 
   const cursorDot = document.createElement("div");
@@ -586,16 +517,27 @@ async function init() {
   };
 
   let resizeTimer = 0;
+  let scrollDirtyTimer = 0;
   let sceneDirty = true;
+
   const markDirty = () => {
     sceneDirty = true;
   };
-  window.addEventListener("scroll", markDirty, { passive: true });
+
+  const markScrollDirty = () => {
+    window.clearTimeout(scrollDirtyTimer);
+    scrollDirtyTimer = window.setTimeout(markDirty, SCROLL_DIRTY_MS);
+  };
+
+  window.addEventListener("scroll", markScrollDirty, { passive: true });
   window.addEventListener("project-media-change", markDirty);
   window.addEventListener("resize", () => {
     markDirty();
     window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(rebuildSceneTextures, 100);
+    resizeTimer = window.setTimeout(() => {
+      rebuildSceneTexture();
+      sceneDirty = false;
+    }, 100);
   });
 
   document.querySelectorAll(".preview img, .project-media img").forEach((img) => {
@@ -619,6 +561,10 @@ async function init() {
       currentMouse.copy(targetMouse);
       for (const point of trailPoints) point.copy(targetMouse);
       uniforms.u_mouse.value.copy(targetMouse);
+      if (sceneDirty) {
+        rebuildSceneTexture();
+        sceneDirty = false;
+      }
     }
     pointerInside = true;
     lastPointerActivity = performance.now();
@@ -666,11 +612,6 @@ async function init() {
     previousTime = now;
     if (document.hidden) return;
 
-    if (sceneDirty) {
-      rebuildSceneTextures();
-      sceneDirty = false;
-    }
-
     const active =
       pointerInside && now - lastPointerActivity < CONFIG.idleDelay * 1000;
     visibilityProgress = THREE.MathUtils.clamp(
@@ -682,12 +623,19 @@ async function init() {
     );
     uniforms.u_visibility.value =
       visibilityProgress * visibilityProgress * (3 - 2 * visibilityProgress);
+
+    // Skip expensive scene paints while the lens is fully hidden
+    if (sceneDirty && uniforms.u_visibility.value > 0) {
+      rebuildSceneTexture();
+      sceneDirty = false;
+    }
+
     uniforms.u_time.value += delta;
 
     accumulator += delta;
     const mouseAlpha = 1 - Math.pow(1 - CONFIG.mouseSmoothness, fixedStep * 60);
     const trailAlpha =
-      1 - Math.exp((-fixedStep * (TRAIL_COUNT - 1)) / CONFIG.trailPersistence);
+      1 - Math.exp((-fixedStep * TRAIL_SEGMENTS) / CONFIG.trailPersistence);
 
     while (accumulator >= fixedStep) {
       currentMouse.lerp(targetMouse, mouseAlpha);
