@@ -21,6 +21,27 @@ body.has-liquid-cursor {
   cursor: none;
 }
 
+/* Precise cursor hotspot — sits at the true pointer, above the liquid lens */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 7;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: #9a9a9a;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(-100px, -100px, 0);
+  will-change: transform;
+}
+
+body.has-liquid-cursor .cursor-dot.is-visible {
+  opacity: 1;
+}
+
 /* Fixed bio — stays put while project images scroll */
 .bio-layer {
   position: fixed;
@@ -219,6 +240,10 @@ body.has-liquid-cursor .liquid-overlay {
   body.has-liquid-cursor .liquid-overlay {
     display: none;
   }
+
+  body.has-liquid-cursor .cursor-dot {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -227,6 +252,10 @@ body.has-liquid-cursor .liquid-overlay {
   }
 
   body.has-liquid-cursor .liquid-overlay {
+    display: none;
+  }
+
+  body.has-liquid-cursor .cursor-dot {
     display: none;
   }
 }

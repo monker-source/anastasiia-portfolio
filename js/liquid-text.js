@@ -571,6 +571,20 @@ async function init() {
   rebuildSceneTextures();
   document.body.classList.add("has-liquid-cursor");
 
+  const cursorDot = document.createElement("div");
+  cursorDot.className = "cursor-dot";
+  cursorDot.setAttribute("aria-hidden", "true");
+  document.body.appendChild(cursorDot);
+
+  const moveCursorDot = (x, y) => {
+    cursorDot.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    cursorDot.classList.add("is-visible");
+  };
+
+  const hideCursorDot = () => {
+    cursorDot.classList.remove("is-visible");
+  };
+
   let resizeTimer = 0;
   let sceneDirty = true;
   const markDirty = () => {
@@ -610,12 +624,14 @@ async function init() {
     lastPointerActivity = performance.now();
     previousPointerX = event.clientX;
     previousPointerY = event.clientY;
+    moveCursorDot(event.clientX, event.clientY);
   };
 
   const deactivatePointer = () => {
     pointerInside = false;
     previousPointerX = NaN;
     previousPointerY = NaN;
+    hideCursorDot();
   };
 
   window.addEventListener("pointermove", (event) => {
@@ -690,4 +706,5 @@ async function init() {
 init().catch((err) => {
   console.error(err);
   document.body.classList.remove("has-liquid-cursor");
+  document.querySelector(".cursor-dot")?.remove();
 });

@@ -189,6 +189,10 @@
   .page-project.has-liquid-cursor .liquid-overlay {
     display: none;
   }
+
+  .page-project.has-liquid-cursor .cursor-dot {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -197,6 +201,10 @@
   }
 
   .page-project.has-liquid-cursor .liquid-overlay {
+    display: none;
+  }
+
+  .page-project.has-liquid-cursor .cursor-dot {
     display: none;
   }
 }
