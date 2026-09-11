@@ -1,0 +1,13 @@
+.DS_Store
+*.zip
+anastasiia-portfolio.zip
+
+# Unused source dump — not linked by the live site
+archive/images/
+archive/texts/
+archive/cv/
+archive/ALL_TEXTS.md
+archive/README.md
+archive/external_links.txt
+archive/manifest.json
+archive/preloaded_state.json

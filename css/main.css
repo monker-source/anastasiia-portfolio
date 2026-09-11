@@ -1,0 +1,232 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  scroll-behavior: auto;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #f4f4f2;
+  color: #0a0a0a;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body.has-liquid-cursor {
+  cursor: none;
+}
+
+/* Fixed bio — stays put while project images scroll */
+.bio-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.contact {
+  position: fixed;
+  bottom: clamp(0.7rem, 1.8vw, 1.15rem);
+  z-index: 6;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(0.68rem, 1.05vw, 0.82rem);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  pointer-events: auto;
+}
+
+.contact--email {
+  left: clamp(0.7rem, 1.8vw, 1.15rem);
+  text-align: left;
+}
+
+.contact--cv {
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.contact--phone {
+  right: clamp(0.7rem, 1.8vw, 1.15rem);
+  text-align: right;
+}
+
+.contact a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.contact a:hover {
+  text-decoration: underline;
+}
+
+.bio {
+  margin: 0;
+  padding: clamp(1.25rem, 3.5vw, 3rem);
+  max-width: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.65rem, 4.6vw, 4.75rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+}
+
+/* Liquid lens sits above scrolling pictures; transparent outside the blob */
+.liquid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+body.has-liquid-cursor .liquid-overlay {
+  opacity: 1;
+}
+
+/* Scrolling project previews above fixed text, below liquid cursor */
+.scroll-track {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.scroll-track__lead {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.scroll-track__tail {
+  height: 40vh;
+  height: 40dvh;
+}
+
+.projects {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18vh, 28vh, 36vh);
+  padding: 0 0 10vh;
+  margin: 0;
+}
+
+.preview {
+  position: relative;
+  margin: 0;
+  width: min(58vw, 720px);
+  left: calc((100% - min(58vw, 720px)) * var(--preview-x, 0.5));
+  transform: rotate(var(--preview-rot, 0deg));
+}
+
+.preview--link {
+  pointer-events: auto;
+}
+
+.preview__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.preview__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 750 / 480;
+  overflow: hidden;
+  clip-path: polygon(
+    12% 8%,
+    38% 2%,
+    62% 6%,
+    88% 4%,
+    97% 22%,
+    94% 48%,
+    98% 72%,
+    86% 94%,
+    58% 98%,
+    28% 95%,
+    6% 82%,
+    2% 52%,
+    5% 24%
+  );
+  -webkit-clip-path: polygon(
+    12% 8%,
+    38% 2%,
+    62% 6%,
+    88% 4%,
+    97% 22%,
+    94% 48%,
+    98% 72%,
+    86% 94%,
+    58% 98%,
+    28% 95%,
+    6% 82%,
+    2% 52%,
+    5% 24%
+  );
+}
+
+.preview__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.mask-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 700px) {
+  .preview {
+    width: min(82vw, 520px);
+    left: calc((100% - min(82vw, 520px)) * var(--preview-x, 0.5));
+  }
+
+  .projects {
+    gap: clamp(14vh, 22vh, 28vh);
+  }
+
+  .contact {
+    max-width: 46vw;
+    font-size: 0.65rem;
+  }
+}
+
+@media (pointer: coarse) {
+  body.has-liquid-cursor {
+    cursor: auto;
+  }
+
+  body.has-liquid-cursor .liquid-overlay {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.has-liquid-cursor {
+    cursor: auto;
+  }
+
+  body.has-liquid-cursor .liquid-overlay {
+    display: none;
+  }
+}
