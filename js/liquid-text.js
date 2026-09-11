@@ -8,14 +8,16 @@
 import * as THREE from "three";
 
 const CONFIG = {
-  radius: 0.17,
+  radius: 0.2,
   distortion: 0.2,
   noiseScale: 4.8,
   speed: 0.1,
   edgeSoftness: 0.065,
-  refraction: 0.16,
-  magnify: 1.1,
+  refraction: 0.3,
+  magnify: 1.22,
   parallax: 0.025,
+  shapeWarp: 0.38,
+  contentWarp: 0.28,
   mouseSmoothness: 0.08,
   trailLength: 1.0,
   trailPersistence: 0.28,
@@ -30,7 +32,8 @@ const CONFIG = {
 const TRAIL_COUNT = 6;
 const TRAIL_SEGMENTS = TRAIL_COUNT - 1;
 const SCENE_DPR_CAP = 1.5;
-const SCROLL_DIRTY_MS = 40;
+const SCROLL_DIRTY_MS = 120;
+const REBUILD_MIN_MS = 100;
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -326,6 +329,9 @@ async function init() {
     u_refraction: { value: CONFIG.refraction },
     u_magnify: { value: CONFIG.magnify },
     u_parallax: { value: CONFIG.parallax },
+    u_shapeWarp: { value: CONFIG.shapeWarp },
+    u_contentWarp: { value: CONFIG.contentWarp },
+    u_scrollOffset: { value: 0 },
   };
 
   const vertexShader = `
@@ -356,6 +362,9 @@ async function init() {
     uniform float u_refraction;
     uniform float u_magnify;
     uniform float u_parallax;
+    uniform float u_shapeWarp;
+    uniform float u_contentWarp;
+    uniform float u_scrollOffset;
 
     varying vec2 vUv;
 
@@ -428,32 +437,52 @@ async function init() {
       vec2 p = (vUv - u_mouse) * aspect;
 
       float n = fbm(p * u_noiseScale + u_time * u_speed);
+      // Time-driven outline: radius varies by angle so the blob morphs on its own
+      float ang = atan(p.y, p.x);
+      float shape = fbm(vec2(ang * 1.35, u_time * u_speed * 0.55) + 1.7);
+      float shape2 = fbm(vec2(ang * 2.1 - u_time * u_speed * 0.35, 3.1));
+      float radiusMod = u_radius * (1.0 + ((shape + shape2) * 0.5 - 0.5) * u_shapeWarp);
 
-      vec3 liquidField = vec3(length(p) - u_radius, p / max(length(p), 0.00001));
+      vec3 liquidField = vec3(length(p) - radiusMod, p / max(length(p), 0.00001));
       for (int i = 0; i < ${TRAIL_SEGMENTS}; i++) {
         vec2 a = (u_trail[i] - u_mouse) * aspect * u_trailLength;
         vec2 b = (u_trail[i + 1] - u_mouse) * aspect * u_trailLength;
-        float ra = u_radius * (1.0 - u_trailTaper * float(i) / float(${TRAIL_SEGMENTS}));
-        float rb = u_radius * (1.0 - u_trailTaper * float(i + 1) / float(${TRAIL_SEGMENTS}));
+        float ra = radiusMod * (1.0 - u_trailTaper * float(i) / float(${TRAIL_SEGMENTS}));
+        float rb = radiusMod * (1.0 - u_trailTaper * float(i + 1) / float(${TRAIL_SEGMENTS}));
         vec3 segmentField = taperedCapsule(p, a, b, ra, rb);
-        float blendWidth = u_radius * 0.12 * smoothstep(0.0, u_radius * 0.15, length(b - a));
+        float blendWidth = radiusMod * 0.12 * smoothstep(0.0, radiusMod * 0.15, length(b - a));
         liquidField = mergeFields(liquidField, segmentField, blendWidth);
       }
 
-      float field = liquidField.x - u_radius * (n - 0.5) * u_distortion * 2.0;
+      float field = liquidField.x - radiusMod * (n - 0.5) * u_distortion * 2.0;
       float mask = 1.0 - smoothstep(-u_edgeSoftness, u_edgeSoftness, field);
       float edgeProfile = smoothstep(0.0, 0.5, mask) * (1.0 - smoothstep(0.5, 1.0, mask));
       vec2 refractionDir = liquidField.yz;
       vec2 rimOffset = refractionDir * edgeProfile * u_refraction * u_visibility;
 
-      // Enlarge content under the lens (zoom UV around pointer)
+      // Keep lens texture synced while scrolling without a full CPU repaint
+      vec2 scrollUv = vUv + vec2(0.0, -u_scrollOffset);
+
+      // Enlarge + warp content across the whole lens (not only the rim)
       float zoom = mix(1.0, u_magnify, mask * u_visibility);
-      vec2 magnifiedUv = u_mouse + (vUv - u_mouse) / max(zoom, 0.0001);
+      vec2 fromMouse = scrollUv - u_mouse;
+      vec2 magnifiedUv = u_mouse + fromMouse / max(zoom, 0.0001);
+      float warpStrength = mask * u_visibility * u_contentWarp;
+      float swirl = (n - 0.5) * warpStrength * 2.4;
+      float cs = cos(swirl);
+      float sn = sin(swirl);
+      vec2 swirled = vec2(
+        fromMouse.x * cs - fromMouse.y * sn,
+        fromMouse.x * sn + fromMouse.y * cs
+      );
+      magnifiedUv = u_mouse + swirled / max(zoom, 0.0001);
+      magnifiedUv += fromMouse * warpStrength * (0.45 + 0.9 * n);
+      magnifiedUv += rimOffset;
 
       // Optical rim: dual sample with opposite refraction (single texture)
       vec2 parallaxOffset = (u_mouse - 0.5) * u_parallax * mask * u_visibility;
-      vec2 outerUv = getCoverUv(magnifiedUv + rimOffset, u_resolution, u_imageRes);
-      vec2 innerUv = getCoverUv(magnifiedUv - rimOffset, u_resolution, u_imageRes) + parallaxOffset;
+      vec2 outerUv = getCoverUv(magnifiedUv, u_resolution, u_imageRes);
+      vec2 innerUv = getCoverUv(magnifiedUv - rimOffset * 1.4, u_resolution, u_imageRes) + parallaxOffset;
       vec4 colOuter = texture2D(u_image, outerUv);
       vec4 colInner = texture2D(u_image, innerUv);
 
@@ -484,6 +513,15 @@ async function init() {
     }
   }
 
+  let paintedScrollY = window.scrollY || 0;
+  let lastRebuildAt = 0;
+
+  function syncScrollOffset() {
+    const h = window.innerHeight || 1;
+    const delta = (window.scrollY - paintedScrollY) / h;
+    uniforms.u_scrollOffset.value = delta;
+  }
+
   function rebuildSceneTexture() {
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -495,8 +533,17 @@ async function init() {
     sceneTex.needsUpdate = true;
     uniforms.u_imageRes.value.set(sceneCanvas.width, sceneCanvas.height);
     uniforms.u_resolution.value.set(w, h);
-    renderer.setPixelRatio(dpr);
-    renderer.setSize(w, h, false);
+    if (
+      renderer.getPixelRatio() !== dpr ||
+      renderer.domElement.width !== sceneCanvas.width ||
+      renderer.domElement.height !== sceneCanvas.height
+    ) {
+      renderer.setPixelRatio(dpr);
+      renderer.setSize(w, h, false);
+    }
+    paintedScrollY = window.scrollY || 0;
+    uniforms.u_scrollOffset.value = 0;
+    lastRebuildAt = performance.now();
   }
 
   rebuildSceneTexture();
@@ -525,6 +572,7 @@ async function init() {
   };
 
   const markScrollDirty = () => {
+    syncScrollOffset();
     window.clearTimeout(scrollDirtyTimer);
     scrollDirtyTimer = window.setTimeout(markDirty, SCROLL_DIRTY_MS);
   };
@@ -624,11 +672,17 @@ async function init() {
     uniforms.u_visibility.value =
       visibilityProgress * visibilityProgress * (3 - 2 * visibilityProgress);
 
-    // Skip expensive scene paints while the lens is fully hidden
+    // Skip expensive scene paints while the lens is fully hidden;
+    // while scrolling, live u_scrollOffset keeps content aligned until rebuild.
     if (sceneDirty && uniforms.u_visibility.value > 0) {
-      rebuildSceneTexture();
-      sceneDirty = false;
+      const since = now - lastRebuildAt;
+      if (since >= REBUILD_MIN_MS) {
+        rebuildSceneTexture();
+        sceneDirty = false;
+      }
     }
+
+    syncScrollOffset();
 
     uniforms.u_time.value += delta;
 
