@@ -566,6 +566,11 @@ async function init() {
   let resizeTimer = 0;
   let scrollDirtyTimer = 0;
   let sceneDirty = true;
+  let pointerInside = false;
+  let lastPointerActivity = -Infinity;
+  let visibilityProgress = 0;
+  let previousPointerX = NaN;
+  let previousPointerY = NaN;
 
   const markDirty = () => {
     sceneDirty = true;
@@ -573,6 +578,10 @@ async function init() {
 
   const markScrollDirty = () => {
     syncScrollOffset();
+    // Keep the lens alive while the user scrolls with a stationary pointer
+    if (pointerInside) {
+      lastPointerActivity = performance.now();
+    }
     window.clearTimeout(scrollDirtyTimer);
     scrollDirtyTimer = window.setTimeout(markDirty, SCROLL_DIRTY_MS);
   };
@@ -594,12 +603,6 @@ async function init() {
 
   const currentMouse = new THREE.Vector2(0.5, 0.5);
   const targetMouse = new THREE.Vector2(0.5, 0.5);
-
-  let pointerInside = false;
-  let lastPointerActivity = -Infinity;
-  let visibilityProgress = 0;
-  let previousPointerX = NaN;
-  let previousPointerY = NaN;
 
   const activatePointer = (event) => {
     const w = window.innerWidth || 1;
@@ -661,7 +664,8 @@ async function init() {
     if (document.hidden) return;
 
     const active =
-      pointerInside && now - lastPointerActivity < CONFIG.idleDelay * 1000;
+      pointerInside &&
+      performance.now() - lastPointerActivity < CONFIG.idleDelay * 1000;
     visibilityProgress = THREE.MathUtils.clamp(
       visibilityProgress +
         ((active ? 1 : -1) * delta) /
