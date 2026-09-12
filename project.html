@@ -7,43 +7,173 @@
       Cartographic (Spatial) Struggle of Performing Corporeality —
       Anastasiia Bulatova
     </title>
-    <link rel="stylesheet" href="./css/main.css" />
-    <link rel="stylesheet" href="./css/project.css" />
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-        }
-      }
-    </script>
+    <link rel="stylesheet" href="./css/main.css?v=8" />
+    <link rel="stylesheet" href="./css/project.css?v=4" />
   </head>
   <body class="page-project">
-    <a class="project-top__back" href="./index.html">Anastasiia Bulatova</a>
+    <a class="project-back" href="./index.html">← back</a>
 
-    <div class="project-text-layer" id="project-text-layer">
-      <header class="project__header">
-        <h1 class="project__title" id="project-title">
-          Cartographic (Spatial) Struggle of Performing Corporeality
-        </h1>
-        <p class="project__subhead" id="project-subhead">
-          Installation, Exhibited in “Part-Time Polyphony”: University of
-          Wisconsin–Madison First-Year MFA Exhibition, USA, 2026
-        </p>
-        <p class="project__body" id="project-body">
-          A multi-screen installation featuring recordings of site-specific
-          performances captured through 360° panoramic imaging and uploaded into
-          Google Maps. Screen-recorded as navigable panoramas within the
-          platform, the work places the performing body at the threshold between
-          two systems of power: the disciplinary architecture of brutalist
-          Belgrade and the soft infrastructural power of platform capitalism. The
-          recurring glitch and distortion within each image and the dispersed,
-          partially present body of the performer within mapped space mark the
-          point where the platform establishes new embodied realities.
-        </p>
-      </header>
+    <div class="stage stage--project" id="stage" aria-label="Scroll project">
+      <div class="world" id="world">
+        <figure
+          class="project-tile project-tile--hero"
+          data-item
+          data-ox="0"
+          data-oy="0"
+          data-hero
+        >
+          <img
+            src="./archive/project%201/1.jpeg"
+            alt="Cartographic (Spatial) Struggle of Performing Corporeality"
+            width="1200"
+            height="675"
+            draggable="false"
+            loading="eager"
+          />
+        </figure>
+
+        <section class="project-copy" data-item data-ox="0" data-oy="1.05">
+          <h1 class="project__title">
+            Cartographic (Spatial) Struggle of Performing Corporeality
+          </h1>
+          <h2 class="project__subhead">
+            Installation, Exhibited in “Part-Time Polyphony”: University of
+            Wisconsin–Madison First-Year MFA Exhibition, USA, 2026
+          </h2>
+          <p class="project__body">
+            A multi-screen installation featuring recordings of site-specific
+            performances captured through 360° panoramic imaging and uploaded into
+            Google Maps. Screen-recorded as navigable panoramas within the
+            platform, the work places the performing body at the threshold between
+            two systems of power: the disciplinary architecture of brutalist
+            Belgrade and the soft infrastructural power of platform capitalism. The
+            recurring glitch and distortion within each image and the dispersed,
+            partially present body of the performer within mapped space mark the
+            point where the platform establishes new embodied realities.
+          </p>
+        </section>
+
+        <div
+          class="project-tile slideshow"
+          data-item
+          data-ox="0.1"
+          data-oy="2.25"
+          data-wf="0.55"
+          data-slideshow
+          aria-roledescription="carousel"
+          aria-label="Installation views, set 1"
+        >
+          <div class="slideshow__viewport">
+            <figure class="slideshow__slide is-active">
+              <img
+                src="./archive/project%201/2a.jpg"
+                alt="Installation view 1 of 3"
+                loading="eager"
+                draggable="false"
+              />
+            </figure>
+            <figure class="slideshow__slide">
+              <img
+                src="./archive/project%201/2b.jpg"
+                alt="Installation view 2 of 3"
+                loading="lazy"
+                draggable="false"
+              />
+            </figure>
+            <figure class="slideshow__slide">
+              <img
+                src="./archive/project%201/2c.jpg"
+                alt="Installation view 3 of 3"
+                loading="lazy"
+                draggable="false"
+              />
+            </figure>
+          </div>
+          <div class="slideshow__bar">
+            <button
+              type="button"
+              class="slideshow__hit slideshow__hit--prev"
+              data-slideshow-prev
+              aria-label="Previous slide"
+            ></button>
+            <p
+              class="slideshow__counter"
+              data-slideshow-counter
+              aria-live="polite"
+            >
+              01 / 03
+            </p>
+            <button
+              type="button"
+              class="slideshow__hit slideshow__hit--next"
+              data-slideshow-next
+              aria-label="Next slide"
+            ></button>
+          </div>
+        </div>
+
+        <div
+          class="project-tile slideshow"
+          data-item
+          data-ox="-0.08"
+          data-oy="3.4"
+          data-wf="0.55"
+          data-slideshow
+          aria-roledescription="carousel"
+          aria-label="Installation views, set 2"
+        >
+          <div class="slideshow__viewport">
+            <figure class="slideshow__slide is-active">
+              <img
+                src="./archive/project%201/3a.png"
+                alt="Mapped panorama 1 of 3"
+                loading="lazy"
+                draggable="false"
+              />
+            </figure>
+            <figure class="slideshow__slide">
+              <img
+                src="./archive/project%201/3b.png"
+                alt="Mapped panorama 2 of 3"
+                loading="lazy"
+                draggable="false"
+              />
+            </figure>
+            <figure class="slideshow__slide">
+              <img
+                src="./archive/project%201/3c.png"
+                alt="Mapped panorama 3 of 3"
+                loading="lazy"
+                draggable="false"
+              />
+            </figure>
+          </div>
+          <div class="slideshow__bar">
+            <button
+              type="button"
+              class="slideshow__hit slideshow__hit--prev"
+              data-slideshow-prev
+              aria-label="Previous slide"
+            ></button>
+            <p
+              class="slideshow__counter"
+              data-slideshow-counter
+              aria-live="polite"
+            >
+              01 / 03
+            </p>
+            <button
+              type="button"
+              class="slideshow__hit slideshow__hit--next"
+              data-slideshow-next
+              aria-label="Next slide"
+            ></button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <canvas id="liquid-canvas" class="liquid-overlay" aria-hidden="true"></canvas>
+    <p class="hint hint--project" id="hint" aria-hidden="true">scroll</p>
 
     <p class="contact contact--email" id="contact-email">
       <a href="mailto:anastasiiaabulatova@gmail.com"
@@ -62,135 +192,7 @@
       <a href="tel:+16085157994">+1 (608) 515-7994</a>
     </p>
 
-    <main class="scroll-track" id="scroll-track">
-      <div class="scroll-track__lead" aria-hidden="true"></div>
-
-      <section
-        class="project-media"
-        id="project-media"
-        aria-label="Project images"
-        data-infinite-media
-      >
-        <figure class="project-figure" data-media-item>
-          <img
-            src="./archive/project%201/1.jpeg"
-            alt="Cartographic (Spatial) Struggle of Performing Corporeality"
-            loading="eager"
-          />
-        </figure>
-
-        <div
-          class="slideshow"
-          data-slideshow
-          data-media-item
-          aria-roledescription="carousel"
-          aria-label="Installation views, set 1"
-        >
-          <div class="slideshow__viewport">
-            <figure class="slideshow__slide is-active">
-              <img
-                src="./archive/project%201/2a.jpg"
-                alt="Installation view 1 of 3"
-                loading="eager"
-              />
-            </figure>
-            <figure class="slideshow__slide">
-              <img
-                src="./archive/project%201/2b.jpg"
-                alt="Installation view 2 of 3"
-                loading="eager"
-              />
-            </figure>
-            <figure class="slideshow__slide">
-              <img
-                src="./archive/project%201/2c.jpg"
-                alt="Installation view 3 of 3"
-                loading="eager"
-              />
-            </figure>
-          </div>
-          <div class="slideshow__bar">
-            <button
-              type="button"
-              class="slideshow__hit slideshow__hit--prev"
-              data-slideshow-prev
-              aria-label="Previous slide"
-            ></button>
-            <p
-              class="slideshow__counter"
-              data-slideshow-counter
-              aria-live="polite"
-            >
-              01 / 03
-            </p>
-            <button
-              type="button"
-              class="slideshow__hit slideshow__hit--next"
-              data-slideshow-next
-              aria-label="Next slide"
-            ></button>
-          </div>
-        </div>
-
-        <div
-          class="slideshow"
-          data-slideshow
-          data-media-item
-          aria-roledescription="carousel"
-          aria-label="Installation views, set 2"
-        >
-          <div class="slideshow__viewport">
-            <figure class="slideshow__slide is-active">
-              <img
-                src="./archive/project%201/3a.png"
-                alt="Mapped panorama 1 of 3"
-                loading="eager"
-              />
-            </figure>
-            <figure class="slideshow__slide">
-              <img
-                src="./archive/project%201/3b.png"
-                alt="Mapped panorama 2 of 3"
-                loading="eager"
-              />
-            </figure>
-            <figure class="slideshow__slide">
-              <img
-                src="./archive/project%201/3c.png"
-                alt="Mapped panorama 3 of 3"
-                loading="eager"
-              />
-            </figure>
-          </div>
-          <div class="slideshow__bar">
-            <button
-              type="button"
-              class="slideshow__hit slideshow__hit--prev"
-              data-slideshow-prev
-              aria-label="Previous slide"
-            ></button>
-            <p
-              class="slideshow__counter"
-              data-slideshow-counter
-              aria-live="polite"
-            >
-              01 / 03
-            </p>
-            <button
-              type="button"
-              class="slideshow__hit slideshow__hit--next"
-              data-slideshow-next
-              aria-label="Next slide"
-            ></button>
-          </div>
-        </div>
-      </section>
-
-      <div class="scroll-track__tail" aria-hidden="true"></div>
-    </main>
-
     <script type="module" src="./js/slideshow.js"></script>
-    <script type="module" src="./js/infinite-media.js"></script>
-    <script type="module" src="./js/liquid-text.js"></script>
+    <script type="module" src="./js/project-canvas.js?v=5"></script>
   </body>
 </html>

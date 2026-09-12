@@ -1,19 +1,15 @@
-/* Project page — fixed copy, scrolling media over text (homepage pattern) */
+/* Project page — vertical infinite canvas with sphere warp */
 
 .page-project {
   background: #f4f4f2;
   color: #0a0a0a;
 }
 
-.page-project.has-liquid-cursor {
-  cursor: none;
-}
-
-.project-top__back {
+.project-back {
   position: fixed;
   top: clamp(0.7rem, 1.8vw, 1.15rem);
   left: clamp(0.7rem, 1.8vw, 1.15rem);
-  z-index: 6;
+  z-index: 8;
   font-family: Arial, Helvetica, sans-serif;
   font-size: clamp(0.68rem, 1.05vw, 0.82rem);
   letter-spacing: 0.01em;
@@ -22,29 +18,35 @@
   pointer-events: auto;
 }
 
-.project-top__back:hover {
+.project-back:hover {
   text-decoration: underline;
 }
 
-.project-text-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  overflow: hidden;
-  padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1.25rem, 3.5vw, 3rem)
-    clamp(3.5rem, 8vh, 5rem);
+.stage--project {
+  cursor: ns-resize;
 }
 
-.project__header {
-  max-width: min(100%, 52rem);
+.stage--project.is-dragging {
+  cursor: grabbing;
+}
+
+.project-copy {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(92vw, 720px);
+  margin: 0;
+  padding: clamp(0.5rem, 1.5vw, 1.25rem);
+  transform-style: preserve-3d;
+  will-change: transform;
+  pointer-events: none;
 }
 
 .project__title {
   margin: 0 0 0.55em;
   font-family: Arial, Helvetica, sans-serif;
   font-weight: 400;
-  font-size: clamp(1.55rem, 3.4vw, 2.65rem);
+  font-size: clamp(1.45rem, 3.2vw, 2.45rem);
   line-height: 1.12;
   letter-spacing: -0.02em;
   text-wrap: pretty;
@@ -52,10 +54,10 @@
 }
 
 .project__subhead {
-  margin: 0 0 1.15em;
-  max-width: 38em;
+  margin: 0 0 1.1em;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: clamp(0.92rem, 1.35vw, 1.05rem);
+  font-weight: 400;
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
   line-height: 1.4;
   letter-spacing: 0.005em;
   text-wrap: pretty;
@@ -63,49 +65,44 @@
 
 .project__body {
   margin: 0;
-  max-width: 42em;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: clamp(0.98rem, 1.45vw, 1.12rem);
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
   line-height: 1.5;
   letter-spacing: 0.005em;
   text-wrap: pretty;
 }
 
-/* Scrolling project pictures sit above fixed text */
-.page-project .scroll-track {
-  z-index: 2;
-  pointer-events: none;
-}
-
-.project-media {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(16vh, 26vh, 34vh);
-  padding: 0 0 12vh;
+.project-tile {
+  position: absolute;
+  left: 0;
+  top: 0;
   margin: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
-.project-figure,
-.project-media .slideshow {
-  position: relative;
-  margin: 0;
-  width: min(72vw, 880px);
-  left: calc((100% - min(72vw, 880px)) * var(--media-x, 0.5));
-  pointer-events: auto;
+.project-tile--hero {
+  overflow: hidden;
 }
 
-.project-figure img,
-.slideshow__slide img {
+.project-tile img {
   display: block;
   width: 100%;
   height: auto;
-  user-select: none;
   -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
 }
 
-.slideshow {
-  position: relative;
+.project-tile--hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.project-tile.slideshow {
+  pointer-events: auto;
 }
 
 .slideshow__viewport {
@@ -128,7 +125,6 @@
   pointer-events: auto;
 }
 
-/* Before aspect-ratio is known, keep the first slide in flow for height */
 .slideshow:not(.is-sized) .slideshow__slide.is-active {
   position: relative;
 }
@@ -182,47 +178,62 @@
   cursor: ew-resize;
 }
 
+.stage--project.is-dragging .slideshow {
+  pointer-events: auto;
+}
+
+.tile-flyer--handoff {
+  z-index: 60;
+  opacity: 1;
+}
+
+.hint--project {
+  bottom: clamp(3.2rem, 7vh, 4.5rem);
+}
+
+.page-project.is-entering .world,
+.page-project.is-entering .hint,
+.page-project.is-entering .contact {
+  opacity: 0;
+}
+
+.page-project.is-entering .project-back {
+  opacity: 0;
+}
+
+/* Flyer used on home → project transition */
+.tile-flyer {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: center center;
+  will-change: transform, left, top, width, height;
+}
+
+.tile-flyer img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.stage.is-transitioning {
+  pointer-events: none;
+}
+
+.stage.is-transitioning .world {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
 @media (max-width: 700px) {
-  .project-text-layer {
-    padding-left: 1.1rem;
-    padding-right: 1.1rem;
+  .project-copy {
+    width: min(94vw, 520px);
   }
 
-  .project-figure,
-  .project-media .slideshow {
-    width: min(88vw, 640px);
-    left: calc((100% - min(88vw, 640px)) * var(--media-x, 0.5));
-  }
-
-  .project-media {
-    gap: clamp(12vh, 20vh, 26vh);
-  }
-}
-
-@media (pointer: coarse) {
-  .page-project.has-liquid-cursor {
-    cursor: auto;
-  }
-
-  .page-project.has-liquid-cursor .liquid-overlay {
-    display: none;
-  }
-
-  .page-project.has-liquid-cursor .cursor-dot {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .page-project.has-liquid-cursor {
-    cursor: auto;
-  }
-
-  .page-project.has-liquid-cursor .liquid-overlay {
-    display: none;
-  }
-
-  .page-project.has-liquid-cursor .cursor-dot {
-    display: none;
+  .project__title {
+    font-size: clamp(1.25rem, 6vw, 1.75rem);
   }
 }

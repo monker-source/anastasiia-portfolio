@@ -4,51 +4,156 @@
   box-sizing: border-box;
 }
 
-html {
+html,
+body {
   margin: 0;
-  scroll-behavior: auto;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
-  margin: 0;
-  min-height: 100%;
   background: #f4f4f2;
   color: #0a0a0a;
   font-family: Arial, Helvetica, sans-serif;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-body.has-liquid-cursor {
-  cursor: none;
-}
-
-/* Precise cursor hotspot — sits at the true pointer, above the liquid lens */
-.cursor-dot {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 7;
-  width: 5px;
-  height: 5px;
-  margin: -2.5px 0 0 -2.5px;
-  border-radius: 50%;
-  background: #9a9a9a;
-  pointer-events: none;
-  opacity: 0;
-  transform: translate3d(-100px, -100px, 0);
-  will-change: transform;
-}
-
-body.has-liquid-cursor .cursor-dot.is-visible {
-  opacity: 1;
-}
-
-/* Fixed bio — stays put while project images scroll */
-.bio-layer {
+.stage {
   position: fixed;
   inset: 0;
   z-index: 1;
-  pointer-events: none;
   overflow: hidden;
+  cursor: grab;
+  perspective: 1100px;
+  perspective-origin: 50% 50%;
+}
+
+.stage.is-dragging {
+  cursor: grabbing;
+}
+
+.world {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.bio-block {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(96vw, 1680px);
+  margin: 0;
+  padding: clamp(1.1rem, 2.6vw, 2.4rem);
+  transform: translate3d(-50%, -50%, 0);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.bio {
+  margin: 0;
+  max-width: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.75rem, 4.6vw, 4.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+}
+
+.tile {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tile img,
+.tile__link {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: auto;
+}
+
+.tile img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.tile__link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  display: block;
+}
+
+.tile--project {
+  cursor: pointer;
+}
+
+.stage.is-dragging .tile__link {
+  pointer-events: none;
+}
+
+.hint {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(3.2rem, 7vh, 4.5rem);
+  z-index: 6;
+  margin: 0;
+  transform: translateX(-50%);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(0.68rem, 1.05vw, 0.8rem);
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: rgba(10, 10, 10, 0.45);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
+.hint.is-hidden {
+  opacity: 0;
+}
+
+.tile-flyer {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: center center;
+  will-change: left, top, width, height, transform;
+  box-shadow: none;
+}
+
+.tile-flyer img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  -webkit-user-drag: none;
+}
+
+.stage.is-transitioning {
+  pointer-events: none;
+}
+
+.stage.is-transitioning .world,
+.stage.is-transitioning ~ .hint,
+.stage.is-transitioning ~ .contact {
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 .contact {
@@ -88,174 +193,24 @@ body.has-liquid-cursor .cursor-dot.is-visible {
   text-decoration: underline;
 }
 
-.bio {
-  margin: 0;
-  padding: clamp(1.25rem, 3.5vw, 3rem);
-  max-width: 100%;
-  font-family: Arial, Helvetica, sans-serif;
-  font-weight: 400;
-  font-size: clamp(1.65rem, 4.6vw, 4.75rem);
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  text-wrap: pretty;
-}
-
-/* Liquid lens sits above scrolling pictures; transparent outside the blob */
-.liquid-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 5;
-  display: block;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-}
-
-body.has-liquid-cursor .liquid-overlay {
-  opacity: 1;
-}
-
-/* Scrolling project previews above fixed text, below liquid cursor */
-.scroll-track {
-  position: relative;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.scroll-track__lead {
-  height: 100vh;
-  height: 100dvh;
-}
-
-.scroll-track__tail {
-  height: 40vh;
-  height: 40dvh;
-}
-
-.projects {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(18vh, 28vh, 36vh);
-  padding: 0 0 10vh;
-  margin: 0;
-}
-
-.preview {
-  position: relative;
-  margin: 0;
-  width: min(58vw, 720px);
-  left: calc((100% - min(58vw, 720px)) * var(--preview-x, 0.5));
-  transform: rotate(var(--preview-rot, 0deg));
-}
-
-.preview--link {
-  pointer-events: auto;
-}
-
-.preview__link {
-  display: block;
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.preview__frame {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 750 / 480;
-  overflow: hidden;
-  clip-path: polygon(
-    12% 8%,
-    38% 2%,
-    62% 6%,
-    88% 4%,
-    97% 22%,
-    94% 48%,
-    98% 72%,
-    86% 94%,
-    58% 98%,
-    28% 95%,
-    6% 82%,
-    2% 52%,
-    5% 24%
-  );
-  -webkit-clip-path: polygon(
-    12% 8%,
-    38% 2%,
-    62% 6%,
-    88% 4%,
-    97% 22%,
-    94% 48%,
-    98% 72%,
-    86% 94%,
-    58% 98%,
-    28% 95%,
-    6% 82%,
-    2% 52%,
-    5% 24%
-  );
-}
-
-.preview__frame img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.mask-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
 @media (max-width: 700px) {
-  .preview {
-    width: min(82vw, 520px);
-    left: calc((100% - min(82vw, 520px)) * var(--preview-x, 0.5));
-  }
-
-  .projects {
-    gap: clamp(14vh, 22vh, 28vh);
+  .bio {
+    font-size: clamp(1.35rem, 6.8vw, 2rem);
   }
 
   .contact {
     max-width: 46vw;
     font-size: 0.65rem;
   }
-}
 
-@media (pointer: coarse) {
-  body.has-liquid-cursor {
-    cursor: auto;
-  }
-
-  body.has-liquid-cursor .liquid-overlay {
-    display: none;
-  }
-
-  body.has-liquid-cursor .cursor-dot {
-    display: none;
+  .hint {
+    bottom: clamp(3.6rem, 9vh, 5rem);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.has-liquid-cursor {
-    cursor: auto;
-  }
-
-  body.has-liquid-cursor .liquid-overlay {
-    display: none;
-  }
-
-  body.has-liquid-cursor .cursor-dot {
-    display: none;
+  .world,
+  .tile {
+    will-change: auto;
   }
 }
