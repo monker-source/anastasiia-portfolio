@@ -85,6 +85,12 @@ export function initSlideshow(root) {
     render();
   };
 
+  const tapAt = (clientX) => {
+    const rect = viewport.getBoundingClientRect();
+    const mid = rect.left + rect.width / 2;
+    go(clientX < mid ? -1 : 1);
+  };
+
   prevBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     go(-1);
@@ -94,10 +100,15 @@ export function initSlideshow(root) {
     go(1);
   });
 
+  // Vertical canvas pans steal pointer capture; project-canvas sends this for taps
+  root.addEventListener("canvas-slideshow-tap", (e) => {
+    tapAt(e.detail?.clientX ?? 0);
+  });
+
   viewport?.addEventListener("click", (e) => {
-    const rect = viewport.getBoundingClientRect();
-    const mid = rect.left + rect.width / 2;
-    go(e.clientX < mid ? -1 : 1);
+    // Ignore synthetic click right after canvas-handled tap
+    if (performance.now() - (window.__slideshowTapLock || 0) < 80) return;
+    tapAt(e.clientX);
   });
 
   root.addEventListener("keydown", (e) => {

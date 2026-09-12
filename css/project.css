@@ -24,6 +24,7 @@
 
 .stage--project {
   cursor: ns-resize;
+  touch-action: none;
 }
 
 .stage--project.is-dragging {

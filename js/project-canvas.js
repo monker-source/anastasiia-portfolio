@@ -30,6 +30,7 @@ const state = {
   lastT: 0,
   moved: false,
   hintHidden: false,
+  tapSlideshow: null,
   period: { w: 1, h: 2400 },
   sphere: { tiltX: 0, tiltY: 0, targetTiltX: 0, targetTiltY: 0 },
 };
@@ -195,8 +196,12 @@ function tick() {
 }
 
 function onPointerDown(e) {
-  // Let slideshow receive clicks / horizontal interaction
-  if (e.target.closest(".contact a, .project-back, [data-slideshow]")) return;
+  // Links / chrome only — slideshow area must still allow vertical pan on mobile
+  const overSlideshow = !!e.target.closest("[data-slideshow]");
+  const overUi = !!e.target.closest(
+    ".contact a, .project-back, [data-slideshow-prev], [data-slideshow-next]"
+  );
+  if (overUi) return;
   if (e.button !== undefined && e.button !== 0) return;
 
   state.dragging = true;
@@ -207,6 +212,9 @@ function onPointerDown(e) {
   state.moved = false;
   state.vx = 0;
   state.vy = 0;
+  state.tapSlideshow = overSlideshow
+    ? e.target.closest("[data-slideshow]")
+    : null;
   stage.classList.add("is-dragging");
   try {
     stage.setPointerCapture(e.pointerId);
@@ -237,9 +245,24 @@ function onPointerMove(e) {
 
 function onPointerUp(e) {
   if (!state.dragging || e.pointerId !== state.pointerId) return;
+  const wasDrag = state.moved;
+  const tapSlideshow = state.tapSlideshow;
+  const upX = e.clientX;
   state.dragging = false;
   state.pointerId = null;
+  state.tapSlideshow = null;
   stage.classList.remove("is-dragging");
+
+  // Tap on slideshow (no pan): flip slide. Vertical drag pans the canvas instead.
+  if (!wasDrag && tapSlideshow) {
+    window.__slideshowTapLock = performance.now();
+    tapSlideshow.dispatchEvent(
+      new CustomEvent("canvas-slideshow-tap", {
+        bubbles: true,
+        detail: { clientX: upX },
+      })
+    );
+  }
 }
 
 function onWheel(e) {
@@ -300,11 +323,29 @@ layoutItems();
 render();
 requestAnimationFrame(tick);
 
-if (document.readyState === "complete") {
+let enterDone = false;
+function runEnterOnce() {
+  if (enterDone) return;
+  enterDone = true;
   finishEnter();
-} else {
-  window.addEventListener("load", finishEnter, { once: true });
 }
+
+// Reveal as soon as the DOM is ready — don't wait for every image (feels like a reboot)
+if (document.readyState === "complete" || document.readyState === "interactive") {
+  runEnterOnce();
+} else {
+  document.addEventListener("DOMContentLoaded", runEnterOnce, { once: true });
+}
+
+window.addEventListener(
+  "load",
+  () => {
+    // Refine layout after images decode without hiding the page again
+    layoutItems();
+    render();
+  },
+  { once: true }
+);
 
 stage.addEventListener("pointerdown", onPointerDown);
 stage.addEventListener("pointermove", onPointerMove);
