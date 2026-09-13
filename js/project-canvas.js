@@ -77,7 +77,10 @@ function layoutItems(enterPayload = null) {
   let cursorY = 0;
   if (hero) {
     const heroH = hero.offsetHeight || heroW * (422 / 750);
-    cursorY = heroH / 2 + Math.max(hy * 0.28, 160);
+    const afterHero = window.innerWidth <= 700
+      ? Math.max(hy * 0.14, 72)
+      : Math.max(hy * 0.28, 160);
+    cursorY = heroH / 2 + afterHero;
   }
 
   items.forEach((el) => {
@@ -94,10 +97,14 @@ function layoutItems(enterPayload = null) {
 
     // Stack copy + media below the hero with breathing room
     const h = el.offsetHeight || hy * 0.6;
+    const gap = window.innerWidth <= 700
+      ? Math.max(hy * 0.12, 56)
+      : Math.max(hy * 0.22, 120);
     const y = cursorY + h / 2;
-    cursorY = y + h / 2 + Math.max(hy * 0.22, 120);
+    cursorY = y + h / 2 + gap;
 
-    el.dataset.lx = String(x);
+    // Mobile: keep everything centered (no horizontal offset)
+    el.dataset.lx = String(window.innerWidth <= 700 ? 0 : x);
     el.dataset.ly = String(y);
   });
 

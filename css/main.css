@@ -194,8 +194,16 @@ body {
 }
 
 @media (max-width: 700px) {
+  .bio-block {
+    width: min(92vw, 520px);
+  }
+
   .bio {
     font-size: clamp(1.35rem, 6.8vw, 2rem);
+  }
+
+  .stage {
+    cursor: ns-resize;
   }
 
   .contact {

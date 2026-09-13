@@ -43,7 +43,10 @@ function wrapCoord(local, pan, period) {
 
 function normalizePan() {
   const { w, h } = state.period;
-  if (w > 0) {
+  if (isMobileLayout()) {
+    state.x = 0;
+    state.vx = 0;
+  } else if (w > 0) {
     while (state.x > w / 2) state.x -= w;
     while (state.x < -w / 2) state.x += w;
   }
@@ -53,29 +56,42 @@ function normalizePan() {
   }
 }
 
+function isMobileLayout() {
+  return window.innerWidth <= 700;
+}
+
 function layoutTiles() {
   const hx = window.innerWidth / 2;
   const hy = window.innerHeight / 2;
+  const mobile = isMobileLayout();
   // Large tiles relative to viewport so start view is mostly peeks
   const base = Math.max(window.innerWidth, 900);
+  // On mobile: compress vertical spread so tiles sit closer
+  const yScale = mobile ? 0.5 : 1;
 
   tiles.forEach((tile) => {
     const ox = Number(tile.dataset.ox);
     const oy = Number(tile.dataset.oy);
     const wf = Number(tile.dataset.wf);
     const rot = Number(tile.dataset.rot) || 0;
-    // ~30% smaller than the peek-heavy first layout
-    const w = Math.min(530, Math.max(290, base * wf * 0.7));
-    const x = ox * hx;
-    const y = oy * hy;
+    const w = mobile
+      ? Math.min(window.innerWidth * 0.78, 300)
+      : Math.min(530, Math.max(290, base * wf * 0.7));
+    // Mobile: center column only — no horizontal scatter
+    const x = mobile ? 0 : ox * hx;
+    const y = oy * hy * yScale;
 
     tile.style.width = `${w}px`;
     tile.dataset.lx = String(x);
     tile.dataset.ly = String(y);
-    tile.dataset.lrot = String(rot);
+    tile.dataset.lrot = String(mobile ? rot * 0.4 : rot);
   });
 
   computePeriod();
+  if (mobile) {
+    state.x = 0;
+    state.vx = 0;
+  }
 }
 
 function computePeriod() {
@@ -102,11 +118,15 @@ function computePeriod() {
     maxY = Math.max(maxY, y + h / 2);
   });
 
+  const mobile = isMobileLayout();
   // Slim seam between wrapped copies — less empty void while looping
-  const gapX = Math.max(window.innerWidth * 0.18, 140);
-  const gapY = Math.max(window.innerHeight * 0.18, 100);
+  const gapX = mobile ? 40 : Math.max(window.innerWidth * 0.18, 140);
+  const gapY = mobile
+    ? Math.max(window.innerHeight * 0.12, 64)
+    : Math.max(window.innerHeight * 0.18, 100);
   state.period = {
-    w: maxX - minX + gapX,
+    // Mobile is a vertical strip — no horizontal looping space
+    w: mobile ? 1 : maxX - minX + gapX,
     h: maxY - minY + gapY,
   };
 }
@@ -235,10 +255,17 @@ function onPointerMove(e) {
   if (Math.hypot(dx, dy) > 10) state.moved = true;
 
   if (state.moved) {
-    state.x += dx * DRAG;
-    state.y += dy * DRAG;
-    state.vx = (dx / dt) * 16;
-    state.vy = (dy / dt) * 16;
+    if (isMobileLayout()) {
+      state.y += dy * DRAG;
+      state.vy = (dy / dt) * 16;
+      state.x = 0;
+      state.vx = 0;
+    } else {
+      state.x += dx * DRAG;
+      state.y += dy * DRAG;
+      state.vx = (dx / dt) * 16;
+      state.vy = (dy / dt) * 16;
+    }
     hideHint();
   }
 
@@ -367,8 +394,12 @@ function onTileClick(e) {
 
 function onWheel(e) {
   e.preventDefault();
-  state.vx -= e.deltaX * 0.08;
-  state.vy -= e.deltaY * 0.08;
+  if (isMobileLayout()) {
+    state.vy -= e.deltaY * 0.08;
+  } else {
+    state.vx -= e.deltaX * 0.08;
+    state.vy -= e.deltaY * 0.08;
+  }
   hideHint();
 }
 
