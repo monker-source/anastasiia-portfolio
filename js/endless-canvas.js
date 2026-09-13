@@ -60,32 +60,75 @@ function isMobileLayout() {
   return window.innerWidth <= 700;
 }
 
+/** Mobile vertical strip: negative = gap between tiles (px). */
+const MOBILE_TILE_SPACING = -70;
+
+function mobileStackStep(height, spacing) {
+  if (spacing >= 0) {
+    return height - Math.min(spacing, height * 0.85);
+  }
+  return height - spacing; // spacing negative → adds gap
+}
+
 function layoutTiles() {
   const hx = window.innerWidth / 2;
   const hy = window.innerHeight / 2;
   const mobile = isMobileLayout();
   // Large tiles relative to viewport so start view is mostly peeks
   const base = Math.max(window.innerWidth, 900);
-  // On mobile: compress vertical spread so tiles sit closer
-  const yScale = mobile ? 0.5 : 1;
 
-  tiles.forEach((tile) => {
-    const ox = Number(tile.dataset.ox);
-    const oy = Number(tile.dataset.oy);
-    const wf = Number(tile.dataset.wf);
-    const rot = Number(tile.dataset.rot) || 0;
-    const w = mobile
-      ? Math.min(window.innerWidth * 0.78, 300)
-      : Math.min(530, Math.max(290, base * wf * 0.7));
-    // Mobile: center column only — no horizontal scatter
-    const x = mobile ? 0 : ox * hx;
-    const y = oy * hy * yScale;
+  if (mobile) {
+    // Keep intro clear; stack peeks above / below with fixed spacing
+    const tileW = Math.min(window.innerWidth * 0.92, 380);
+    const spacing = MOBILE_TILE_SPACING;
+    const bioGap = Math.max(window.innerHeight * 0.05, 22);
+    const bioH = bio?.offsetHeight || Math.min(window.innerHeight * 0.55, 420);
+    const clearHalf = bioH / 2 + bioGap;
 
-    tile.style.width = `${w}px`;
-    tile.dataset.lx = String(x);
-    tile.dataset.ly = String(y);
-    tile.dataset.lrot = String(mobile ? rot * 0.4 : rot);
-  });
+    tiles.forEach((tile) => {
+      const rot = Number(tile.dataset.rot) || 0;
+      tile.style.width = `${tileW}px`;
+      tile.dataset.lx = "0";
+      tile.dataset.lrot = String(rot * 0.4);
+    });
+
+    const above = tiles
+      .filter((t) => Number(t.dataset.oy) < 0)
+      .sort((a, b) => Number(b.dataset.oy) - Number(a.dataset.oy));
+    let cursor = -clearHalf;
+    above.forEach((tile) => {
+      const h = tile.offsetHeight || tileW * 0.65;
+      const y = cursor - h / 2;
+      tile.dataset.ly = String(y);
+      cursor = y - mobileStackStep(h, spacing) + h / 2;
+    });
+
+    const below = tiles
+      .filter((t) => Number(t.dataset.oy) >= 0)
+      .sort((a, b) => Number(a.dataset.oy) - Number(b.dataset.oy));
+    cursor = clearHalf;
+    below.forEach((tile) => {
+      const h = tile.offsetHeight || tileW * 0.65;
+      const y = cursor + h / 2;
+      tile.dataset.ly = String(y);
+      cursor = y - h / 2 + mobileStackStep(h, spacing);
+    });
+  } else {
+    tiles.forEach((tile) => {
+      const ox = Number(tile.dataset.ox);
+      const oy = Number(tile.dataset.oy);
+      const wf = Number(tile.dataset.wf);
+      const rot = Number(tile.dataset.rot) || 0;
+      const w = Math.min(530, Math.max(290, base * wf * 0.7));
+      const x = ox * hx;
+      const y = oy * hy;
+
+      tile.style.width = `${w}px`;
+      tile.dataset.lx = String(x);
+      tile.dataset.ly = String(y);
+      tile.dataset.lrot = String(rot);
+    });
+  }
 
   computePeriod();
   if (mobile) {
@@ -100,6 +143,7 @@ function computePeriod() {
   let minY = 0;
   let maxY = 0;
 
+  const mobile = isMobileLayout();
   const bioW = bio?.offsetWidth || 1100;
   const bioH = bio?.offsetHeight || 500;
   minX = Math.min(minX, -bioW / 2);
@@ -118,16 +162,15 @@ function computePeriod() {
     maxY = Math.max(maxY, y + h / 2);
   });
 
-  const mobile = isMobileLayout();
   // Slim seam between wrapped copies — less empty void while looping
   const gapX = mobile ? 40 : Math.max(window.innerWidth * 0.18, 140);
   const gapY = mobile
-    ? Math.max(window.innerHeight * 0.12, 64)
+    ? -MOBILE_TILE_SPACING
     : Math.max(window.innerHeight * 0.18, 100);
   state.period = {
     // Mobile is a vertical strip — no horizontal looping space
     w: mobile ? 1 : maxX - minX + gapX,
-    h: maxY - minY + gapY,
+    h: Math.max(maxY - minY + gapY, 1),
   };
 }
 
@@ -417,11 +460,11 @@ layoutTiles();
 render();
 requestAnimationFrame(tick);
 
-// Recalc period once images have real heights
+// Recalc layout once images have real heights (mobile stacking needs them)
 window.addEventListener(
   "load",
   () => {
-    computePeriod();
+    layoutTiles();
     render();
   },
   { once: true }
