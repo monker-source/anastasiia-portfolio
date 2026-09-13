@@ -37,6 +37,22 @@
   animation-timing-function: ease;
 }
 
+/* Credits are identical on both pages — hold still, no crossfade */
+::view-transition-group(contact-email),
+::view-transition-group(contact-cv),
+::view-transition-group(contact-phone) {
+  animation: none;
+}
+
+::view-transition-old(contact-email),
+::view-transition-new(contact-email),
+::view-transition-old(contact-cv),
+::view-transition-new(contact-cv),
+::view-transition-old(contact-phone),
+::view-transition-new(contact-phone) {
+  animation: none;
+}
+
 html,
 body {
   margin: 0;
@@ -183,10 +199,8 @@ body {
 }
 
 .stage.is-transitioning .world,
-.stage.is-transitioning ~ .hint,
-.stage.is-transitioning ~ .contact {
+.stage.is-transitioning ~ .hint {
   opacity: 0;
-  /* Instant hide so the VT root snapshot never captures fading credits */
   transition: none;
 }
 
@@ -202,20 +216,24 @@ body {
   pointer-events: auto;
 }
 
+/* Keep credits continuous across home ↔ project View Transitions */
 .contact--email {
   left: clamp(0.7rem, 1.8vw, 1.15rem);
   text-align: left;
+  view-transition-name: contact-email;
 }
 
 .contact--cv {
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
+  view-transition-name: contact-cv;
 }
 
 .contact--phone {
   right: clamp(0.7rem, 1.8vw, 1.15rem);
   text-align: right;
+  view-transition-name: contact-phone;
 }
 
 .contact a {

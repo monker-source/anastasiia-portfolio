@@ -340,10 +340,8 @@ function finishEnter() {
   render();
 
   const reveal = () => {
-    const chrome = [
-      ...document.querySelectorAll(".contact, .hint, .project-back"),
-    ];
-    // Hold credits at 0 while enter classes drop, then fade in (no snap/flash)
+    // Credits stay visible across the handoff — only fade hint / back
+    const chrome = [...document.querySelectorAll(".hint, .project-back")];
     chrome.forEach((el) => {
       el.style.opacity = "0";
       el.style.transition = "none";

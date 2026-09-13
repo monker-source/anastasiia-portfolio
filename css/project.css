@@ -206,11 +206,9 @@
 /* Fallback handoff: hide stage until remounted flyer covers the seam */
 html.is-entering:not(.is-vt-enter) .world,
 html.is-entering:not(.is-vt-enter) .hint,
-html.is-entering:not(.is-vt-enter) .contact,
 html.is-entering:not(.is-vt-enter) .project-back,
 .page-project.is-entering:not(.is-vt-enter) .world,
 .page-project.is-entering:not(.is-vt-enter) .hint,
-.page-project.is-entering:not(.is-vt-enter) .contact,
 .page-project.is-entering:not(.is-vt-enter) .project-back {
   opacity: 0;
 }
@@ -218,18 +216,15 @@ html.is-entering:not(.is-vt-enter) .project-back,
 /* View Transition enter: keep hero visible for the shared snapshot */
 html.is-vt-enter .world > :not([data-hero]),
 html.is-vt-enter .hint,
-html.is-vt-enter .contact,
 html.is-vt-enter .project-back,
 .page-project.is-vt-enter .world > :not([data-hero]),
 .page-project.is-vt-enter .hint,
-.page-project.is-vt-enter .contact,
 .page-project.is-vt-enter .project-back {
   opacity: 0;
 }
 
-/* Soft-fade chrome after enter (JS sets opacity inline during reveal) */
+/* Soft-fade hint/back after enter — credits stay put on both pages */
 .page-project .hint,
-.page-project .contact,
 .page-project .project-back {
   transition: opacity 0.45s ease;
 }
