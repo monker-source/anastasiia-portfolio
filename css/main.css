@@ -299,19 +299,11 @@ body {
   }
 
   .site-chrome {
-    grid-template-columns: 1fr auto;
-    row-gap: 0.45rem;
-  }
-
-  .contact--cv {
-    grid-column: 1 / -1;
-    justify-self: center;
-    order: 3;
+    gap: clamp(0.4rem, 2vw, 0.75rem);
   }
 
   .site-contacts {
-    grid-column: 2;
-    grid-row: 1;
+    gap: clamp(0.45rem, 2vw, 0.75rem);
   }
 
   .contact {
