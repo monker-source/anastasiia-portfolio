@@ -59,6 +59,7 @@ function layoutItems(enterPayload = null) {
   const hy = window.innerHeight / 2;
   const base = Math.max(window.innerWidth, 900);
   const { w: heroW } = heroTargetSize();
+  const mobile = window.innerWidth <= 700;
 
   // Hero first — exact size shared with homepage transition
   if (hero) {
@@ -77,9 +78,8 @@ function layoutItems(enterPayload = null) {
   let cursorY = 0;
   if (hero) {
     const heroH = hero.offsetHeight || heroW * (422 / 750);
-    const afterHero = window.innerWidth <= 700
-      ? Math.max(hy * 0.14, 72)
-      : Math.max(hy * 0.28, 160);
+    // Keep lede (title + subhead) snug under the hero — one visual unit
+    const afterHero = mobile ? Math.max(hy * 0.06, 28) : Math.max(hy * 0.045, 22);
     cursorY = heroH / 2 + afterHero;
   }
 
@@ -89,22 +89,30 @@ function layoutItems(enterPayload = null) {
     const ox = Number(el.dataset.ox) || 0;
     const wf = Number(el.dataset.wf);
     const x = ox * hx;
+    const isLede = el.classList.contains("project-copy--lede");
+    const isBody = el.classList.contains("project-copy--body");
 
     if (wf) {
       const w = Math.min(820, Math.max(260, base * wf));
       el.style.width = `${w}px`;
     }
 
-    // Stack copy + media below the hero with breathing room
     const h = el.offsetHeight || hy * 0.6;
-    const gap = window.innerWidth <= 700
-      ? Math.max(hy * 0.12, 56)
-      : Math.max(hy * 0.22, 120);
-    const y = cursorY + h / 2;
-    cursorY = y + h / 2 + gap;
+    let gapAfter;
+    if (isLede) {
+      // Small pause before body text
+      gapAfter = mobile ? Math.max(hy * 0.1, 40) : Math.max(hy * 0.08, 36);
+    } else if (isBody) {
+      gapAfter = mobile ? Math.max(hy * 0.12, 56) : Math.max(hy * 0.12, 64);
+    } else {
+      // Media blocks — closer than before on desktop
+      gapAfter = mobile ? Math.max(hy * 0.12, 56) : Math.max(hy * 0.12, 64);
+    }
 
-    // Mobile: keep everything centered (no horizontal offset)
-    el.dataset.lx = String(window.innerWidth <= 700 ? 0 : x);
+    const y = cursorY + h / 2;
+    cursorY = y + h / 2 + gapAfter;
+
+    el.dataset.lx = String(mobile ? 0 : x);
     el.dataset.ly = String(y);
   });
 
@@ -332,10 +340,31 @@ function finishEnter() {
   render();
 
   const reveal = () => {
+    const chrome = [
+      ...document.querySelectorAll(".contact, .hint, .project-back"),
+    ];
+    // Hold credits at 0 while enter classes drop, then fade in (no snap/flash)
+    chrome.forEach((el) => {
+      el.style.opacity = "0";
+      el.style.transition = "none";
+    });
     document.documentElement.classList.remove("is-entering", "is-vt-enter");
     document.body.classList.remove("is-entering", "is-vt-enter");
     world.style.opacity = "1";
     render();
+
+    requestAnimationFrame(() => {
+      chrome.forEach((el) => {
+        el.style.transition = "opacity 0.45s ease";
+        el.style.opacity = "1";
+      });
+      setTimeout(() => {
+        chrome.forEach((el) => {
+          el.style.transition = "";
+          el.style.opacity = "";
+        });
+      }, 500);
+    });
 
     if (handoff) {
       requestAnimationFrame(() => {

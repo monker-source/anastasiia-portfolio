@@ -43,8 +43,18 @@
   pointer-events: none;
 }
 
+.project-copy--lede {
+  width: min(92vw, 880px);
+  padding-top: 0.35rem;
+  padding-bottom: 0.15rem;
+}
+
+.project-copy--body {
+  padding-top: 0.25rem;
+}
+
 .project__title {
-  margin: 0 0 0.55em;
+  margin: 0 0 0.28em;
   font-family: Arial, Helvetica, sans-serif;
   font-weight: 400;
   font-size: clamp(1.45rem, 3.2vw, 2.45rem);
@@ -55,11 +65,11 @@
 }
 
 .project__subhead {
-  margin: 0 0 1.1em;
+  margin: 0;
   font-family: Arial, Helvetica, sans-serif;
   font-weight: 400;
   font-size: clamp(0.9rem, 1.3vw, 1.05rem);
-  line-height: 1.4;
+  line-height: 1.35;
   letter-spacing: 0.005em;
   text-wrap: pretty;
 }
@@ -217,8 +227,11 @@ html.is-vt-enter .project-back,
   opacity: 0;
 }
 
-.page-project .world {
-  transition: opacity 0.35s ease;
+/* Soft-fade chrome after enter (JS sets opacity inline during reveal) */
+.page-project .hint,
+.page-project .contact,
+.page-project .project-back {
+  transition: opacity 0.45s ease;
 }
 
 /* Flyer used on home → project transition */

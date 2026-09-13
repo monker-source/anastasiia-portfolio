@@ -15,14 +15,17 @@
   }
 }
 
+/* Same page background — skip root crossfade (it flashes the bottom credits) */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.12s;
-  animation-timing-function: ease;
+  animation: none;
+  mix-blend-mode: normal;
+  height: 100%;
+  overflow: clip;
 }
 
 ::view-transition-group(project-hero) {
-  animation-duration: 0.18s;
+  animation-duration: 0.16s;
   animation-timing-function: ease;
 }
 
@@ -30,6 +33,8 @@
 ::view-transition-new(project-hero) {
   height: 100%;
   object-fit: cover;
+  animation-duration: 0.16s;
+  animation-timing-function: ease;
 }
 
 html,
@@ -181,7 +186,8 @@ body {
 .stage.is-transitioning ~ .hint,
 .stage.is-transitioning ~ .contact {
   opacity: 0;
-  transition: opacity 0.4s ease;
+  /* Instant hide so the VT root snapshot never captures fading credits */
+  transition: none;
 }
 
 .contact {
