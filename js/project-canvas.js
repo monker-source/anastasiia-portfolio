@@ -5,7 +5,6 @@
 
 const stage = document.getElementById("stage");
 const world = document.getElementById("world");
-const hint = document.getElementById("hint");
 const items = [...document.querySelectorAll("[data-item]")];
 const hero = document.querySelector("[data-hero]");
 
@@ -35,7 +34,6 @@ const state = {
   lastY: 0,
   lastT: 0,
   moved: false,
-  hintHidden: false,
   tapSlideshow: null,
   period: { w: 1, h: 2400 },
 };
@@ -133,12 +131,6 @@ function computePeriod() {
   };
 }
 
-function hideHint() {
-  if (state.hintHidden || !hint) return;
-  state.hintHidden = true;
-  hint.classList.add("is-hidden");
-}
-
 function placeItems() {
   const { h: ph } = state.period;
 
@@ -206,7 +198,6 @@ function onPointerMove(e) {
   if (state.moved) {
     state.y += dy * DRAG;
     state.vy = (dy / dt) * 16;
-    hideHint();
   }
 
   state.lastX = e.clientX;
@@ -239,7 +230,6 @@ function onPointerUp(e) {
 function onWheel(e) {
   e.preventDefault();
   state.vy -= e.deltaY * 0.08;
-  hideHint();
 }
 
 function readEnterPayload() {
@@ -296,13 +286,6 @@ function finishEnter() {
   render();
 
   const reveal = () => {
-    // Credits stay visible across the handoff — only fade hint
-    const chrome = [...document.querySelectorAll(".hint")];
-    chrome.forEach((el) => {
-      el.style.opacity = "0";
-      el.style.transition = "none";
-    });
-
     const animateCopy = entering && !reducedMotion;
     if (animateCopy) {
       document.body.classList.add("is-copy-pending");
@@ -314,17 +297,6 @@ function finishEnter() {
     render();
 
     requestAnimationFrame(() => {
-      chrome.forEach((el) => {
-        el.style.transition = "opacity 0.45s ease";
-        el.style.opacity = "1";
-      });
-      setTimeout(() => {
-        chrome.forEach((el) => {
-          el.style.transition = "";
-          el.style.opacity = "";
-        });
-      }, 500);
-
       if (animateCopy) {
         // Two frames: pending (opacity 0) → reveal (staggered fade/slide up)
         requestAnimationFrame(() => {
