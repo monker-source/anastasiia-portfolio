@@ -14,8 +14,14 @@ const entering = new URLSearchParams(location.search).has("enter");
 
 /** Must match homepage flyToProject target */
 export function heroTargetSize() {
-  const w = Math.min(window.innerWidth * 0.72, 880);
+  const w = Math.min(window.innerWidth * 0.84, 1080);
   return { w };
+}
+
+/** Local Y so the hero sits in the upper band (text readable below). */
+function heroAnchorY(heroH) {
+  const topPad = Math.max(window.innerHeight * 0.035, 36);
+  return topPad + heroH / 2 - window.innerHeight / 2;
 }
 
 const state = {
@@ -62,6 +68,7 @@ function layoutItems(enterPayload = null) {
   const mobile = window.innerWidth <= 700;
 
   // Hero first — exact size shared with homepage transition
+  let heroLy = 0;
   if (hero) {
     const w = enterPayload?.w || heroW;
     const aspect =
@@ -71,16 +78,18 @@ function layoutItems(enterPayload = null) {
     hero.style.width = `${w}px`;
     hero.style.height = `${w * aspect}px`;
     hero.style.aspectRatio = "";
+    const heroH = hero.offsetHeight || w * aspect;
+    heroLy = heroAnchorY(heroH);
     hero.dataset.lx = "0";
-    hero.dataset.ly = "0";
+    hero.dataset.ly = String(heroLy);
   }
 
   let cursorY = 0;
   if (hero) {
     const heroH = hero.offsetHeight || heroW * (422 / 750);
-    // Keep lede (title + subhead) snug under the hero — one visual unit
+    // Keep copy (title + body) snug under the hero — one visual unit
     const afterHero = mobile ? Math.max(hy * 0.06, 28) : Math.max(hy * 0.045, 22);
-    cursorY = heroH / 2 + afterHero;
+    cursorY = heroLy + heroH / 2 + afterHero;
   }
 
   items.forEach((el) => {
@@ -89,25 +98,14 @@ function layoutItems(enterPayload = null) {
     const ox = Number(el.dataset.ox) || 0;
     const wf = Number(el.dataset.wf);
     const x = ox * hx;
-    const isLede = el.classList.contains("project-copy--lede");
-    const isBody = el.classList.contains("project-copy--body");
 
     if (wf) {
-      const w = Math.min(820, Math.max(260, base * wf));
+      const w = Math.min(1100, Math.max(280, base * wf));
       el.style.width = `${w}px`;
     }
 
     const h = el.offsetHeight || hy * 0.6;
-    let gapAfter;
-    if (isLede) {
-      // Small pause before body text
-      gapAfter = mobile ? Math.max(hy * 0.1, 40) : Math.max(hy * 0.08, 36);
-    } else if (isBody) {
-      gapAfter = mobile ? Math.max(hy * 0.12, 56) : Math.max(hy * 0.12, 64);
-    } else {
-      // Media blocks — closer than before on desktop
-      gapAfter = mobile ? Math.max(hy * 0.12, 56) : Math.max(hy * 0.12, 64);
-    }
+    const gapAfter = mobile ? Math.max(hy * 0.12, 56) : Math.max(hy * 0.12, 64);
 
     const y = cursorY + h / 2;
     cursorY = y + h / 2 + gapAfter;
@@ -175,10 +173,12 @@ function warpItems() {
     const dy = (sy - cy) / cy;
     const r2 = dx * dx + dy * dy;
 
-    const depth = Math.max(-MAX_DEPTH, -r2 * MAX_DEPTH);
-    const scale = peripheryScale(dx, dy);
-    const bendX = dy * r2 * 3.2;
-    const bendY = -dx * r2 * 3.2;
+    // Hero stays unwarped so the home→project handoff matches pixel size
+    const isHero = el === hero;
+    const depth = isHero ? 0 : Math.max(-MAX_DEPTH, -r2 * MAX_DEPTH);
+    const scale = isHero ? 1 : peripheryScale(dx, dy);
+    const bendX = isHero ? 0 : dy * r2 * 3.2;
+    const bendY = isHero ? 0 : -dx * r2 * 3.2;
 
     el.style.transform = `translate3d(${lx}px, ${ly}px, ${depth.toFixed(2)}px) translate(-50%, -50%) rotateX(${bendX.toFixed(2)}deg) rotateY(${bendY.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
   });
@@ -214,7 +214,7 @@ function onPointerDown(e) {
   // Links / chrome only — slideshow area must still allow vertical pan on mobile
   const overSlideshow = !!e.target.closest("[data-slideshow]");
   const overUi = !!e.target.closest(
-    ".contact a, .project-back, [data-slideshow-prev], [data-slideshow-next]"
+    ".contact a, .site-brand, [data-slideshow-prev], [data-slideshow-next]"
   );
   if (overUi) return;
   if (e.button !== undefined && e.button !== 0) return;
@@ -340,12 +340,18 @@ function finishEnter() {
   render();
 
   const reveal = () => {
-    // Credits stay visible across the handoff — only fade hint / back
-    const chrome = [...document.querySelectorAll(".hint, .project-back")];
+    // Credits stay visible across the handoff — only fade hint
+    const chrome = [...document.querySelectorAll(".hint")];
     chrome.forEach((el) => {
       el.style.opacity = "0";
       el.style.transition = "none";
     });
+
+    const animateCopy = entering && !reducedMotion;
+    if (animateCopy) {
+      document.body.classList.add("is-copy-pending");
+    }
+
     document.documentElement.classList.remove("is-entering", "is-vt-enter");
     document.body.classList.remove("is-entering", "is-vt-enter");
     world.style.opacity = "1";
@@ -362,6 +368,17 @@ function finishEnter() {
           el.style.opacity = "";
         });
       }, 500);
+
+      if (animateCopy) {
+        // Two frames: pending (opacity 0) → reveal (staggered fade/slide up)
+        requestAnimationFrame(() => {
+          document.body.classList.add("is-copy-reveal");
+          document.body.classList.remove("is-copy-pending");
+          setTimeout(() => {
+            document.body.classList.remove("is-copy-reveal");
+          }, 1400);
+        });
+      }
     });
 
     if (handoff) {

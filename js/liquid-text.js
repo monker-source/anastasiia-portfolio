@@ -159,20 +159,13 @@ function paintContactLink(ctx, contactEl) {
 
   const size = cssPx(style.fontSize, 12);
   const weight = style.fontWeight || "400";
-  const alignRight = contactEl.classList.contains("contact--phone");
-  const alignCenter = contactEl.classList.contains("contact--cv");
 
   ctx.fillStyle = CONFIG.ink;
   ctx.font = `${weight} ${size}px ${fontStack(style)}`;
-  ctx.textAlign = alignRight ? "right" : alignCenter ? "center" : "left";
+  ctx.textAlign = "left";
   ctx.textBaseline = "top";
 
-  const x = alignRight
-    ? lr.right
-    : alignCenter
-      ? lr.left + lr.width / 2
-      : lr.left;
-  ctx.fillText(link.textContent.trim(), x, lr.top);
+  ctx.fillText(link.textContent.trim(), lr.left, lr.top);
 }
 
 function paintProjectMedia(ctx, width, height) {

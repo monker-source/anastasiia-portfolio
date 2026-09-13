@@ -222,7 +222,7 @@ function tick() {
 
 function onPointerDown(e) {
   if (state.transitioning) return;
-  if (e.target.closest(".contact a")) return;
+  if (e.target.closest(".contact a, .site-brand")) return;
   if (e.button !== undefined && e.button !== 0) return;
 
   state.dragging = true;
@@ -336,11 +336,12 @@ function flyToProject(tile, href) {
   stage.classList.add("is-transitioning");
   hideHint();
 
-  // Same formula as project-canvas heroTargetSize()
-  const targetW = Math.min(window.innerWidth * 0.72, 880);
+  // Same formulas as project-canvas heroTargetSize() + heroAnchorY()
+  const targetW = Math.min(window.innerWidth * 0.84, 1080);
   const targetH = targetW * (rect.height / Math.max(rect.width, 1));
   const targetLeft = (window.innerWidth - targetW) / 2;
-  const targetTop = (window.innerHeight - targetH) / 2;
+  // Land in the upper band so title text is visible under the hero
+  const targetTop = Math.max(window.innerHeight * 0.035, 36);
   const duration = reducedMotion ? 0 : 820;
 
   requestAnimationFrame(() => {
