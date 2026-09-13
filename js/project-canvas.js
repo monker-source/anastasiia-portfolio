@@ -17,10 +17,16 @@ export function heroTargetSize() {
   return { w };
 }
 
-/** Local Y so the hero sits in the upper band (text readable below). */
+/** Gap under the menu matching the menu's top inset. */
+export function heroTopPad() {
+  const chrome = document.querySelector(".site-chrome");
+  if (chrome) return chrome.offsetHeight;
+  return Math.max(window.innerHeight * 0.035, 36);
+}
+
+/** Local Y so the hero sits just under the top chrome. */
 function heroAnchorY(heroH) {
-  const topPad = Math.max(window.innerHeight * 0.035, 36);
-  return topPad + heroH / 2 - window.innerHeight / 2;
+  return heroTopPad() + heroH / 2 - window.innerHeight / 2;
 }
 
 const state = {

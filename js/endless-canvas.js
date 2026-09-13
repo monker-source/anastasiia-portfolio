@@ -336,12 +336,15 @@ function flyToProject(tile, href) {
   stage.classList.add("is-transitioning");
   hideHint();
 
-  // Same formulas as project-canvas heroTargetSize() + heroAnchorY()
+  // Same formulas as project-canvas heroTargetSize() + heroTopPad()
   const targetW = Math.min(window.innerWidth * 0.84, 1080);
   const targetH = targetW * (rect.height / Math.max(rect.width, 1));
   const targetLeft = (window.innerWidth - targetW) / 2;
-  // Land in the upper band so title text is visible under the hero
-  const targetTop = Math.max(window.innerHeight * 0.035, 36);
+  // Match menu top inset under the chrome
+  const chrome = document.querySelector(".site-chrome");
+  const targetTop = chrome
+    ? chrome.offsetHeight
+    : Math.max(window.innerHeight * 0.035, 36);
   const duration = reducedMotion ? 0 : 820;
 
   requestAnimationFrame(() => {
