@@ -354,14 +354,20 @@ function flyToProject(tile, href) {
     flyer.style.transform = "rotate(0deg)";
   });
 
-  // Swap to project asset near the end so landing matches the page hero
-  const swapAt = Math.max(0, duration - 120);
-  setTimeout(() => {
-    const flyerImg = flyer.querySelector("img");
-    if (flyerImg) flyerImg.src = projectSrc;
-  }, swapAt);
+  // Prefer hero asset as soon as it's warm so the page-boundary snapshot matches
+  const flyerImg = flyer.querySelector("img");
+  const swapToHero = () => {
+    if (flyerImg && flyerImg.src !== projectSrc) flyerImg.src = projectSrc;
+  };
+  warm.decode?.().then(swapToHero).catch(swapToHero);
+  warm.addEventListener("load", swapToHero, { once: true });
+  const swapAt = Math.max(0, duration - 180);
+  setTimeout(swapToHero, swapAt);
 
   const go = () => {
+    swapToHero();
+    // Shared element for cross-document View Transitions (erases the reload flash)
+    flyer.style.viewTransitionName = "project-hero";
     try {
       sessionStorage.setItem(
         "projectEnter",

@@ -4,6 +4,34 @@
   box-sizing: border-box;
 }
 
+/* Bridge full-page navigations (home ↔ project) without a blank flash */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.12s;
+  animation-timing-function: ease;
+}
+
+::view-transition-group(project-hero) {
+  animation-duration: 0.18s;
+  animation-timing-function: ease;
+}
+
+::view-transition-old(project-hero),
+::view-transition-new(project-hero) {
+  height: 100%;
+  object-fit: cover;
+}
+
 html,
 body {
   margin: 0;

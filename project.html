@@ -7,8 +7,32 @@
       Cartographic (Spatial) Struggle of Performing Corporeality —
       Anastasiia Bulatova
     </title>
-    <link rel="stylesheet" href="./css/main.css?v=8" />
-    <link rel="stylesheet" href="./css/project.css?v=6" />
+    <link rel="stylesheet" href="./css/main.css?v=11" />
+    <link rel="stylesheet" href="./css/project.css?v=7" />
+    <script>
+      (function () {
+        var entering = new URLSearchParams(location.search).has("enter");
+        if (entering) document.documentElement.classList.add("is-entering");
+        window.addEventListener("pagereveal", function (e) {
+          if (!entering || !e.viewTransition) return;
+          window.__projectVtEnter = true;
+          window.__projectVt = e.viewTransition;
+          document.documentElement.classList.add("is-vt-enter");
+          // Size hero before the new-page snapshot so VT has no geometry pop
+          try {
+            var payload = JSON.parse(sessionStorage.getItem("projectEnter") || "null");
+            var heroEl = document.querySelector("[data-hero]");
+            if (heroEl && payload && payload.w) {
+              heroEl.style.width = payload.w + "px";
+              heroEl.style.height = payload.h + "px";
+              heroEl.style.aspectRatio = "";
+            }
+          } catch (err) {
+            /* ignore */
+          }
+        });
+      })();
+    </script>
   </head>
   <body class="page-project">
     <a class="project-back" href="./index.html">← back</a>
@@ -193,6 +217,6 @@
     </p>
 
     <script type="module" src="./js/slideshow.js?v=3"></script>
-    <script type="module" src="./js/project-canvas.js?v=8"></script>
+    <script type="module" src="./js/project-canvas.js?v=9"></script>
   </body>
 </html>

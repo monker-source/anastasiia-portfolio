@@ -302,28 +302,57 @@ function mountHandOffFlyer(payload) {
   return flyer;
 }
 
+let vtEnter = Boolean(window.__projectVtEnter);
+let enterPayloadCache = null;
+
+if (entering) {
+  document.documentElement.classList.add("is-entering");
+  document.body.classList.add("is-entering");
+  if (vtEnter) {
+    document.documentElement.classList.add("is-vt-enter");
+    document.body.classList.add("is-vt-enter");
+  }
+}
+
 function finishEnter() {
+  vtEnter = vtEnter || Boolean(window.__projectVtEnter);
+  if (vtEnter) {
+    document.documentElement.classList.add("is-vt-enter");
+    document.body.classList.add("is-vt-enter");
+  }
+
   const payload = entering ? readEnterPayload() : null;
-  const handoff = entering ? mountHandOffFlyer(payload) : null;
+  enterPayloadCache = payload;
+  const useHandoff = entering && !vtEnter && !reducedMotion;
+  const handoff = useHandoff ? mountHandOffFlyer(payload) : null;
 
   layoutItems(payload);
 
   state.y = 0;
-  document.body.classList.remove("is-entering");
-  world.style.opacity = "1";
   render();
 
-  if (handoff) {
-    requestAnimationFrame(() => {
-      handoff.style.transition = "opacity 0.28s ease";
-      handoff.style.opacity = "0";
-      setTimeout(() => handoff.remove(), 300);
-    });
-  }
-}
+  const reveal = () => {
+    document.documentElement.classList.remove("is-entering", "is-vt-enter");
+    document.body.classList.remove("is-entering", "is-vt-enter");
+    world.style.opacity = "1";
+    render();
 
-if (entering) {
-  document.body.classList.add("is-entering");
+    if (handoff) {
+      requestAnimationFrame(() => {
+        handoff.style.transition = "opacity 0.4s ease";
+        handoff.style.opacity = "0";
+        setTimeout(() => handoff.remove(), 420);
+      });
+    }
+  };
+
+  const vt = window.__projectVt;
+  if (vtEnter && vt && vt.finished) {
+    vt.finished.then(reveal).catch(reveal);
+  } else {
+    // Wait two frames so the handoff flyer is painted before chrome fades in
+    requestAnimationFrame(() => requestAnimationFrame(reveal));
+  }
 }
 
 layoutItems();
@@ -337,17 +366,63 @@ function runEnterOnce() {
   finishEnter();
 }
 
-// Reveal as soon as the DOM is ready — don't wait for every image (feels like a reboot)
+function armEnter() {
+  if (!entering) {
+    runEnterOnce();
+    return;
+  }
+
+  let armed = false;
+  const proceed = (fromVt) => {
+    if (armed) return;
+    armed = true;
+    if (fromVt) {
+      vtEnter = true;
+      document.documentElement.classList.add("is-vt-enter");
+      document.body.classList.add("is-vt-enter");
+    }
+    runEnterOnce();
+  };
+
+  if (window.__projectVtEnter) {
+    proceed(true);
+    return;
+  }
+
+  // Wait for pagereveal so VT detection + hero snapshot sizing stay in sync
+  if ("onpagereveal" in window) {
+    window.addEventListener(
+      "pagereveal",
+      (e) => {
+        if (e.viewTransition) {
+          window.__projectVtEnter = true;
+          window.__projectVt = e.viewTransition;
+        }
+        proceed(Boolean(e.viewTransition));
+      },
+      { once: true }
+    );
+    setTimeout(() => proceed(false), 150);
+  } else {
+    proceed(false);
+  }
+}
+
 if (document.readyState === "complete" || document.readyState === "interactive") {
-  runEnterOnce();
+  armEnter();
 } else {
-  document.addEventListener("DOMContentLoaded", runEnterOnce, { once: true });
+  document.addEventListener("DOMContentLoaded", armEnter, { once: true });
 }
 
 window.addEventListener(
   "load",
   () => {
-    // Refine layout after images decode without hiding the page again
+    if (entering) {
+      // Keep enter payload sizing — avoid hero jump after the seamless handoff
+      layoutItems(enterPayloadCache);
+      render();
+      return;
+    }
     layoutItems();
     render();
   },
