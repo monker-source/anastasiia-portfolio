@@ -1,6 +1,6 @@
 /**
  * Project page: vertical-only infinite canvas.
- * Sphere warp like the homepage moodboard. Horizontal pan locked.
+ * Horizontal pan locked. No spherical warp — flat layout.
  */
 
 const stage = document.getElementById("stage");
@@ -38,13 +38,10 @@ const state = {
   hintHidden: false,
   tapSlideshow: null,
   period: { w: 1, h: 2400 },
-  sphere: { tiltX: 0, tiltY: 0, targetTiltX: 0, targetTiltY: 0 },
 };
 
 const FRICTION = reducedMotion ? 0.82 : 0.925;
 const DRAG = 1;
-const MAX_TILT = 5.5;
-const MAX_DEPTH = 110;
 
 function wrapCoord(local, pan, period) {
   return local + period * Math.round((-pan - local) / period);
@@ -142,52 +139,19 @@ function hideHint() {
   hint.classList.add("is-hidden");
 }
 
-function updateSphereFromVelocity() {
-  const speed = Math.abs(state.vy);
-  const damp = Math.min(1, speed / 28);
-  state.sphere.targetTiltX = (-state.vy / 40) * damp;
-  state.sphere.targetTiltY = 0;
-  state.sphere.targetTiltX = Math.max(-MAX_TILT, Math.min(MAX_TILT, state.sphere.targetTiltX));
-}
-
-function peripheryScale(dx, dy) {
-  // Mild size falloff — full at center, no smaller than 0.75
-  const dist = Math.min(1.2, Math.hypot(dx, dy));
-  return Math.max(0.75, 1 - dist * 0.22);
-}
-
-function warpItems() {
-  const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
+function placeItems() {
   const { h: ph } = state.period;
 
   items.forEach((el) => {
-    const baseX = Number(el.dataset.lx);
-    const baseY = Number(el.dataset.ly);
-    const lx = baseX;
-    const ly = wrapCoord(baseY, state.y, ph);
-
-    const sx = cx + state.x + lx;
-    const sy = cy + state.y + ly;
-    const dx = (sx - cx) / cx;
-    const dy = (sy - cy) / cy;
-    const r2 = dx * dx + dy * dy;
-
-    // Hero stays unwarped so the home→project handoff matches pixel size
-    const isHero = el === hero;
-    const depth = isHero ? 0 : Math.max(-MAX_DEPTH, -r2 * MAX_DEPTH);
-    const scale = isHero ? 1 : peripheryScale(dx, dy);
-    const bendX = isHero ? 0 : dy * r2 * 3.2;
-    const bendY = isHero ? 0 : -dx * r2 * 3.2;
-
-    el.style.transform = `translate3d(${lx}px, ${ly}px, ${depth.toFixed(2)}px) translate(-50%, -50%) rotateX(${bendX.toFixed(2)}deg) rotateY(${bendY.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
+    const lx = Number(el.dataset.lx);
+    const ly = wrapCoord(Number(el.dataset.ly), state.y, ph);
+    el.style.transform = `translate3d(${lx}px, ${ly}px, 0) translate(-50%, -50%)`;
   });
 }
 
 function render() {
-  const { tiltX, tiltY } = state.sphere;
-  world.style.transform = `translate3d(0px, ${state.y}px, 0) rotateX(${tiltX.toFixed(3)}deg) rotateY(${tiltY.toFixed(3)}deg)`;
-  warpItems();
+  world.style.transform = `translate3d(0px, ${state.y}px, 0)`;
+  placeItems();
 }
 
 function tick() {
@@ -198,14 +162,6 @@ function tick() {
   }
 
   normalizePan();
-  updateSphereFromVelocity();
-  state.sphere.tiltX += (state.sphere.targetTiltX - state.sphere.tiltX) * 0.12;
-  state.sphere.tiltY += (state.sphere.targetTiltY - state.sphere.tiltY) * 0.12;
-
-  if (!state.dragging && state.vy === 0) {
-    state.sphere.targetTiltX *= 0.9;
-  }
-
   render();
   requestAnimationFrame(tick);
 }
