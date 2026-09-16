@@ -39,6 +39,7 @@
 
 /* Credits are identical on both pages — hold still, no crossfade */
 ::view-transition-group(site-brand),
+::view-transition-group(site-all),
 ::view-transition-group(contact-email),
 ::view-transition-group(contact-cv),
 ::view-transition-group(contact-phone) {
@@ -47,6 +48,8 @@
 
 ::view-transition-old(site-brand),
 ::view-transition-new(site-brand),
+::view-transition-old(site-all),
+::view-transition-new(site-all),
 ::view-transition-old(contact-email),
 ::view-transition-new(contact-email),
 ::view-transition-old(contact-cv),
@@ -251,6 +254,37 @@ body {
   text-decoration: underline;
 }
 
+.site-all {
+  justify-self: center;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(0.68rem, 1.05vw, 0.82rem);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: inherit;
+  text-decoration: none;
+  pointer-events: auto;
+  white-space: nowrap;
+  view-transition-name: site-all;
+}
+
+.site-all:hover,
+.site-all.is-active {
+  text-decoration: underline;
+}
+
+/* Desktop “ALL PROJECTS”: vertical strip, wide on desktop */
+body.is-projects-stack .bio-block {
+  width: min(90vw, 1280px);
+}
+
+body.is-projects-stack .bio {
+  font-size: clamp(1.6rem, 3vw, 3.1rem);
+}
+
+body.is-projects-stack .stage {
+  cursor: ns-resize;
+}
+
 .site-contacts {
   display: flex;
   flex-wrap: wrap;
@@ -279,8 +313,6 @@ body {
 }
 
 .contact--cv {
-  justify-self: center;
-  text-align: center;
   view-transition-name: contact-cv;
 }
 
@@ -311,7 +343,12 @@ body {
   }
 
   .site-chrome {
+    grid-template-columns: 1fr auto;
     gap: clamp(0.4rem, 2vw, 0.75rem);
+  }
+
+  .site-all {
+    display: none;
   }
 
   .site-contacts {

@@ -27,6 +27,7 @@ const state = {
   transitioning: false,
   hitLink: null,
   hitTile: null,
+  stackMode: false,
   period: { w: 3200, h: 2400 },
   sphere: { tiltX: 0, tiltY: 0, targetTiltX: 0, targetTiltY: 0 },
 };
@@ -57,7 +58,24 @@ function normalizePan() {
 }
 
 function isMobileLayout() {
-  return window.innerWidth <= 700;
+  return state.stackMode || window.innerWidth <= 700;
+}
+
+function setStackMode(on) {
+  state.stackMode = Boolean(on);
+  document.body.classList.toggle("is-projects-stack", state.stackMode);
+  const allBtn = document.querySelector(".site-all");
+  if (allBtn) {
+    allBtn.setAttribute("aria-pressed", state.stackMode ? "true" : "false");
+    allBtn.classList.toggle("is-active", state.stackMode);
+  }
+  state.x = 0;
+  state.y = 0;
+  state.vx = 0;
+  state.vy = 0;
+  layoutTiles();
+  render();
+  if (state.stackMode) hideHint();
 }
 
 /** Mobile vertical strip: negative = gap between tiles (px). */
@@ -79,7 +97,10 @@ function layoutTiles() {
 
   if (mobile) {
     // Keep intro clear; stack peeks above / below with fixed spacing
-    const tileW = Math.min(window.innerWidth * 0.92, 380);
+    // Desktop ALL PROJECTS uses most of the width; real phones stay compact
+    const tileW = state.stackMode && window.innerWidth > 700
+      ? Math.min(window.innerWidth * 0.84, 1120)
+      : Math.min(window.innerWidth * 0.92, 380);
     const spacing = MOBILE_TILE_SPACING;
     const bioGap = Math.max(window.innerHeight * 0.05, 22);
     const bioH = bio?.offsetHeight || Math.min(window.innerHeight * 0.55, 420);
@@ -193,6 +214,16 @@ function warpTiles() {
   const cx = window.innerWidth / 2;
   const cy = window.innerHeight / 2;
   const { w: pw, h: ph } = state.period;
+  // List view keeps a soft sphere so identity stays, without collapsing width
+  const soft = state.stackMode;
+  const depthAmt = soft ? MAX_DEPTH * 0.38 : MAX_DEPTH;
+  const scaleFalloff = soft ? 0.08 : 0.22;
+  const scaleFloor = soft ? 0.92 : 0.75;
+  const bendAmt = soft ? 1.15 : 3.2;
+  const bioDepthAmt = soft ? MAX_DEPTH * 0.18 : MAX_DEPTH * 0.45;
+  const bioScaleFalloff = soft ? 0.05 : 0.12;
+  const bioScaleFloor = soft ? 0.94 : 0.85;
+  const bioBendAmt = soft ? 0.9 : 2.4;
 
   tiles.forEach((tile) => {
     const baseX = Number(tile.dataset.lx);
@@ -207,11 +238,11 @@ function warpTiles() {
     const dy = (sy - cy) / cy;
     const r2 = dx * dx + dy * dy;
 
-    const depth = Math.max(-MAX_DEPTH, -r2 * MAX_DEPTH);
+    const depth = Math.max(-depthAmt, -r2 * depthAmt);
     const dist = Math.min(1.2, Math.hypot(dx, dy));
-    const scale = Math.max(0.75, 1 - dist * 0.22);
-    const bendX = dy * r2 * 3.2;
-    const bendY = -dx * r2 * 3.2;
+    const scale = Math.max(scaleFloor, 1 - dist * scaleFalloff);
+    const bendX = dy * r2 * bendAmt;
+    const bendY = -dx * r2 * bendAmt;
 
     tile.style.transform = `translate3d(${lx}px, ${ly}px, ${depth.toFixed(2)}px) translate(-50%, -50%) rotateX(${bendX.toFixed(2)}deg) rotateY(${bendY.toFixed(2)}deg) rotate(${rot}deg) scale(${scale.toFixed(4)})`;
   });
@@ -224,18 +255,19 @@ function warpTiles() {
     const dx = (sx - cx) / cx;
     const dy = (sy - cy) / cy;
     const r2 = dx * dx + dy * dy;
-    const depth = Math.max(-MAX_DEPTH * 0.45, -r2 * MAX_DEPTH * 0.45);
+    const depth = Math.max(-bioDepthAmt, -r2 * bioDepthAmt);
     const dist = Math.min(1.2, Math.hypot(dx, dy));
-    const scale = Math.max(0.85, 1 - dist * 0.12);
-    const bendX = dy * r2 * 2.4;
-    const bendY = -dx * r2 * 2.4;
+    const scale = Math.max(bioScaleFloor, 1 - dist * bioScaleFalloff);
+    const bendX = dy * r2 * bioBendAmt;
+    const bendY = -dx * r2 * bioBendAmt;
     bio.style.transform = `translate3d(calc(-50% + ${lx}px), calc(-50% + ${ly}px), ${depth.toFixed(2)}px) rotateX(${bendX.toFixed(2)}deg) rotateY(${bendY.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
   }
 }
 
 function render() {
   const { tiltX, tiltY } = state.sphere;
-  world.style.transform = `translate3d(${state.x}px, ${state.y}px, 0) rotateX(${tiltX.toFixed(3)}deg) rotateY(${tiltY.toFixed(3)}deg)`;
+  const tiltScale = state.stackMode ? 0.35 : 1;
+  world.style.transform = `translate3d(${state.x}px, ${state.y}px, 0) rotateX(${(tiltX * tiltScale).toFixed(3)}deg) rotateY(${(tiltY * tiltScale).toFixed(3)}deg)`;
   warpTiles();
 }
 
@@ -265,7 +297,7 @@ function tick() {
 
 function onPointerDown(e) {
   if (state.transitioning) return;
-  if (e.target.closest(".contact a, .site-brand")) return;
+  if (e.target.closest(".contact a, .site-brand, .site-all")) return;
   if (e.button !== undefined && e.button !== 0) return;
 
   state.dragging = true;
@@ -454,6 +486,23 @@ function onWheel(e) {
     state.vy -= e.deltaY * 0.08;
   }
   hideHint();
+}
+
+const allProjectsBtn = document.querySelector(".site-all");
+if (allProjectsBtn) {
+  allProjectsBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    setStackMode(!state.stackMode);
+  });
+}
+
+if (new URLSearchParams(location.search).has("all")) {
+  setStackMode(true);
+  try {
+    history.replaceState(null, "", "./index.html");
+  } catch {
+    /* ignore */
+  }
 }
 
 layoutTiles();

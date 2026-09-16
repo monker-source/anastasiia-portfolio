@@ -168,7 +168,7 @@ function onPointerDown(e) {
   // Links / chrome only — slideshow area must still allow vertical pan on mobile
   const overSlideshow = !!e.target.closest("[data-slideshow]");
   const overUi = !!e.target.closest(
-    ".contact a, .site-brand, [data-slideshow-prev], [data-slideshow-next]"
+    ".contact a, .site-brand, .site-all, [data-slideshow-prev], [data-slideshow-next]"
   );
   if (overUi) return;
   if (e.button !== undefined && e.button !== 0) return;
