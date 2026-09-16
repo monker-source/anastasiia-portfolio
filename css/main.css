@@ -272,17 +272,17 @@ body {
   text-decoration: underline;
 }
 
-/* Desktop “ALL PROJECTS”: vertical strip, wide on desktop */
-body.is-projects-stack .bio-block {
-  width: min(90vw, 1280px);
-}
-
-body.is-projects-stack .bio {
-  font-size: clamp(1.6rem, 3vw, 3.1rem);
-}
-
+/* Desktop “ALL PROJECTS”: vertical strip; intro keeps free-canvas size behind tiles */
 body.is-projects-stack .stage {
   cursor: ns-resize;
+}
+
+body.is-projects-stack .bio-block {
+  z-index: 0;
+}
+
+body.is-projects-stack .tile {
+  z-index: 1;
 }
 
 .site-contacts {

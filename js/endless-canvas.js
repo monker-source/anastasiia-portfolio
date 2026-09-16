@@ -98,12 +98,18 @@ function layoutTiles() {
   if (mobile) {
     // Keep intro clear; stack peeks above / below with fixed spacing
     // Desktop ALL PROJECTS uses most of the width; real phones stay compact
-    const tileW = state.stackMode && window.innerWidth > 700
-      ? Math.min(window.innerWidth * 0.84, 1120)
+    const desktopStack = state.stackMode && window.innerWidth > 700;
+    const tileW = desktopStack
+      ? Math.min(window.innerWidth * 0.84, 1080)
       : Math.min(window.innerWidth * 0.92, 380);
     const spacing = MOBILE_TILE_SPACING;
-    const bioGap = Math.max(window.innerHeight * 0.05, 22);
-    const bioH = bio?.offsetHeight || Math.min(window.innerHeight * 0.55, 420);
+    // List view: tiles pass over the full-size intro (no reserved clear band)
+    const bioGap = desktopStack
+      ? 0
+      : Math.max(window.innerHeight * 0.05, 22);
+    const bioH = desktopStack
+      ? 0
+      : bio?.offsetHeight || Math.min(window.innerHeight * 0.55, 420);
     const clearHalf = bioH / 2 + bioGap;
 
     tiles.forEach((tile) => {
@@ -220,20 +226,23 @@ function warpTiles() {
   const scaleFalloff = soft ? 0.08 : 0.22;
   const scaleFloor = soft ? 0.92 : 0.75;
   const bendAmt = soft ? 1.15 : 3.2;
-  const bioDepthAmt = soft ? MAX_DEPTH * 0.18 : MAX_DEPTH * 0.45;
-  const bioScaleFalloff = soft ? 0.05 : 0.12;
-  const bioScaleFloor = soft ? 0.94 : 0.85;
-  const bioBendAmt = soft ? 0.9 : 2.4;
+  const bioDepthAmt = MAX_DEPTH * 0.45;
+  const bioScaleFalloff = 0.12;
+  const bioScaleFloor = 0.85;
+  const bioBendAmt = 2.4;
+  // In list view the world stays put; pan is baked into tiles so intro can stay fixed
+  const panX = soft ? state.x : 0;
+  const panY = soft ? state.y : 0;
 
   tiles.forEach((tile) => {
     const baseX = Number(tile.dataset.lx);
     const baseY = Number(tile.dataset.ly);
     const rot = Number(tile.dataset.lrot) || 0;
-    const lx = wrapCoord(baseX, state.x, pw);
-    const ly = wrapCoord(baseY, state.y, ph);
+    const lx = wrapCoord(baseX, state.x, pw) + panX;
+    const ly = wrapCoord(baseY, state.y, ph) + panY;
 
-    const sx = cx + state.x + lx;
-    const sy = cy + state.y + ly;
+    const sx = soft ? cx + lx : cx + state.x + lx;
+    const sy = soft ? cy + ly : cy + state.y + ly;
     const dx = (sx - cx) / cx;
     const dy = (sy - cy) / cy;
     const r2 = dx * dx + dy * dy;
@@ -248,6 +257,11 @@ function warpTiles() {
   });
 
   if (bio) {
+    if (soft) {
+      // World is locked; intro is a fixed full-size backdrop behind the strip
+      bio.style.transform = "translate3d(-50%, -50%, -170px)";
+      return;
+    }
     const lx = wrapCoord(0, state.x, pw);
     const ly = wrapCoord(0, state.y, ph);
     const sx = cx + state.x + lx;
@@ -265,9 +279,13 @@ function warpTiles() {
 }
 
 function render() {
-  const { tiltX, tiltY } = state.sphere;
-  const tiltScale = state.stackMode ? 0.35 : 1;
-  world.style.transform = `translate3d(${state.x}px, ${state.y}px, 0) rotateX(${(tiltX * tiltScale).toFixed(3)}deg) rotateY(${(tiltY * tiltScale).toFixed(3)}deg)`;
+  if (state.stackMode) {
+    // Keep world (and intro) still — only tiles carry the pan
+    world.style.transform = "translate3d(0, 0, 0)";
+  } else {
+    const { tiltX, tiltY } = state.sphere;
+    world.style.transform = `translate3d(${state.x}px, ${state.y}px, 0) rotateX(${tiltX.toFixed(3)}deg) rotateY(${tiltY.toFixed(3)}deg)`;
+  }
   warpTiles();
 }
 
