@@ -233,6 +233,8 @@ function warpTiles() {
   // In list view the world stays put; pan is baked into tiles so intro can stay fixed
   const panX = soft ? state.x : 0;
   const panY = soft ? state.y : 0;
+  // Lift tiles toward camera so intro can sit at z=0 (same size/place as free view)
+  const tileZLift = soft ? 48 : 0;
 
   tiles.forEach((tile) => {
     const baseX = Number(tile.dataset.lx);
@@ -247,7 +249,7 @@ function warpTiles() {
     const dy = (sy - cy) / cy;
     const r2 = dx * dx + dy * dy;
 
-    const depth = Math.max(-depthAmt, -r2 * depthAmt);
+    const depth = Math.max(-depthAmt, -r2 * depthAmt) + tileZLift;
     const dist = Math.min(1.2, Math.hypot(dx, dy));
     const scale = Math.max(scaleFloor, 1 - dist * scaleFalloff);
     const bendX = dy * r2 * bendAmt;
@@ -258,8 +260,8 @@ function warpTiles() {
 
   if (bio) {
     if (soft) {
-      // World is locked; intro is a fixed full-size backdrop behind the strip
-      bio.style.transform = "translate3d(-50%, -50%, -170px)";
+      // Match free-canvas rest pose exactly (z=0) — tiles are lifted in front
+      bio.style.transform = "translate3d(-50%, -50%, 0px)";
       return;
     }
     const lx = wrapCoord(0, state.x, pw);
