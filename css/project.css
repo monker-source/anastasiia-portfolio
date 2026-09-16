@@ -5,9 +5,86 @@
   color: #0a0a0a;
 }
 
+/* ALL PROJECTS overlay on project page — freezes project canvas underneath */
+.all-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.all-layer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgba(244, 244, 242, 0.42);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+
+body.is-project-all-open .all-layer {
+  pointer-events: auto;
+}
+
+body.is-project-all-open .all-layer::before {
+  opacity: 1;
+}
+
+.all-layer__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  cursor: ns-resize;
+  perspective: 1100px;
+  perspective-origin: 50% 50%;
+  touch-action: none;
+}
+
+.all-layer__world {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.all-layer__tile {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.all-layer__tile img,
+.all-layer__tile .tile__link {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: auto;
+}
+
+.all-layer__tile img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+body.is-project-all-open .stage--project {
+  pointer-events: none;
+  opacity: 0.38;
+  filter: grayscale(0.12);
+  transition: opacity 0.45s ease, filter 0.45s ease;
+}
+
 .stage--project {
   cursor: ns-resize;
   touch-action: none;
+  transition: opacity 0.45s ease, filter 0.45s ease;
 }
 
 .stage--project.is-dragging {

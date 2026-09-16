@@ -165,6 +165,7 @@ function tick() {
 }
 
 function onPointerDown(e) {
+  if (window.__projectAllOpen) return;
   // Links / chrome only — slideshow area must still allow vertical pan on mobile
   const overSlideshow = !!e.target.closest("[data-slideshow]");
   const overUi = !!e.target.closest(
@@ -234,6 +235,10 @@ function onPointerUp(e) {
 }
 
 function onWheel(e) {
+  if (window.__projectAllOpen) {
+    e.preventDefault();
+    return;
+  }
   e.preventDefault();
   state.vy -= e.deltaY * 0.08;
 }

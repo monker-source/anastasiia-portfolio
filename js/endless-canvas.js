@@ -28,13 +28,15 @@ const state = {
   hitLink: null,
   hitTile: null,
   stackMode: false,
+  listAnchor: { x: 0, y: 0 },
   layoutTween: {
     active: false,
     t0: 0,
-    duration: 300,
+    duration: 500,
     from: null,
     to: null,
     toStack: false,
+    onComplete: null,
   },
   period: { w: 3200, h: 2400 },
   sphere: { tiltX: 0, tiltY: 0, targetTiltX: 0, targetTiltY: 0 },
@@ -44,7 +46,7 @@ const FRICTION = reducedMotion ? 0.82 : 0.925;
 const DRAG = 1;
 const MAX_TILT = 5.5;
 const MAX_DEPTH = 95;
-const LAYOUT_TWEEN_MS = 400;
+const LAYOUT_TWEEN_MS = 500;
 
 function wrapCoord(local, pan, period) {
   // Nearest replica of this item relative to the current view
@@ -81,15 +83,20 @@ function setStackChrome(on) {
   if (allBtn) {
     allBtn.setAttribute("aria-pressed", state.stackMode ? "true" : "false");
     allBtn.classList.toggle("is-active", state.stackMode);
+    allBtn.textContent = state.stackMode ? "BACK" : "ALL PROJECTS";
   }
   if (state.stackMode) hideHint();
 }
 
 function setStackMode(on) {
   state.layoutTween.active = false;
+  state.layoutTween.onComplete = null;
   setStackChrome(on);
-  state.x = 0;
-  state.y = 0;
+  if (on) {
+    state.listAnchor = { x: state.x, y: state.y };
+  }
+  state.x = on ? 0 : state.listAnchor.x;
+  state.y = on ? 0 : state.listAnchor.y;
   state.vx = 0;
   state.vy = 0;
   layoutTiles();
@@ -202,7 +209,7 @@ function applyLayout(layouts) {
 function layoutTiles() {
   applyLayout(computeLayout(state.stackMode));
   computePeriod();
-  if (isMobileLayout()) {
+  if (state.stackMode || window.innerWidth <= 700) {
     state.x = 0;
     state.vx = 0;
   }
@@ -220,6 +227,35 @@ function lerpLayout(from, to, u) {
   });
 }
 
+/** Map free-canvas local layout to on-screen positions for a given pan. */
+function visualLayoutsFromLocal(locals, pan) {
+  let minX = 0;
+  let maxX = 0;
+  let minY = 0;
+  let maxY = 0;
+  const bioW = bio?.offsetWidth || 1100;
+  const bioH = bio?.offsetHeight || 500;
+  minX = Math.min(minX, -bioW / 2);
+  maxX = Math.max(maxX, bioW / 2);
+  minY = Math.min(minY, -bioH / 2);
+  maxY = Math.max(maxY, bioH / 2);
+  locals.forEach((L) => {
+    const h = L.width * 0.6;
+    minX = Math.min(minX, L.lx - L.width / 2);
+    maxX = Math.max(maxX, L.lx + L.width / 2);
+    minY = Math.min(minY, L.ly - h / 2);
+    maxY = Math.max(maxY, L.ly + h / 2);
+  });
+  const pw = Math.max(maxX - minX + Math.max(window.innerWidth * 0.18, 140), 1);
+  const ph = Math.max(maxY - minY + Math.max(window.innerHeight * 0.18, 100), 1);
+  return locals.map((L) => ({
+    lx: wrapCoord(L.lx, pan.x, pw) + pan.x,
+    ly: wrapCoord(L.ly, pan.y, ph) + pan.y,
+    lrot: L.lrot,
+    width: L.width,
+  }));
+}
+
 function snapshotLayouts() {
   const tw = state.layoutTween;
   if (tw.active && tw.from && tw.to) {
@@ -228,7 +264,17 @@ function snapshotLayouts() {
     );
     return lerpLayout(tw.from, tw.to, u);
   }
-  // Visual positions (include pan) so mode switch does not jump
+  if (state.stackMode) {
+    // List mode: column is screen-centered; y includes list scroll
+    const { h: ph } = state.period;
+    return tiles.map((tile) => ({
+      lx: Number(tile.dataset.lx) || 0,
+      ly: wrapCoord(Number(tile.dataset.ly) || 0, state.y, ph) + state.y,
+      lrot: Number(tile.dataset.lrot) || 0,
+      width: parseFloat(tile.style.width) || tile.offsetWidth || 400,
+    }));
+  }
+  // Free canvas: visual positions (include pan)
   const { w: pw, h: ph } = state.period;
   return tiles.map((tile) => ({
     lx: wrapCoord(Number(tile.dataset.lx) || 0, state.x, pw) + state.x,
@@ -259,7 +305,10 @@ function updateLayoutTween(now) {
   if (u >= 1) {
     tw.active = false;
     applyLayout(tw.to);
-    computePeriod();
+    const done = tw.onComplete;
+    tw.onComplete = null;
+    if (done) done();
+    else computePeriod();
   }
 }
 
@@ -271,22 +320,52 @@ function toggleStackMode() {
   }
 
   const from = snapshotLayouts();
-  setStackChrome(toStack);
-  state.x = 0;
-  state.y = 0;
   state.vx = 0;
   state.vy = 0;
 
-  const to = computeLayout(toStack);
+  if (toStack) {
+    // Remember where we were; freeze that as the list backdrop
+    state.listAnchor = { x: state.x, y: state.y };
+    setStackChrome(true);
+    // List scroll starts at 0; column is built in screen space
+    state.x = 0;
+    state.y = 0;
+    const to = computeLayout(true);
+    state.layoutTween.active = true;
+    state.layoutTween.t0 = performance.now();
+    state.layoutTween.duration = LAYOUT_TWEEN_MS;
+    state.layoutTween.from = from;
+    state.layoutTween.to = to;
+    state.layoutTween.toStack = true;
+    state.layoutTween.onComplete = () => {
+      applyLayout(to);
+      computePeriod();
+    };
+    applyLayout(from);
+    render();
+    return;
+  }
+
+  // Leave list → fly back to scattered places at the saved spot
+  const anchor = { x: state.listAnchor.x, y: state.listAnchor.y };
+  setStackChrome(false);
+  const freeLocal = computeLayout(false);
+  const to = visualLayoutsFromLocal(freeLocal, anchor);
+  state.x = 0;
+  state.y = 0;
   state.layoutTween.active = true;
   state.layoutTween.t0 = performance.now();
   state.layoutTween.duration = LAYOUT_TWEEN_MS;
   state.layoutTween.from = from;
   state.layoutTween.to = to;
-  state.layoutTween.toStack = toStack;
-
+  state.layoutTween.toStack = false;
+  state.layoutTween.onComplete = () => {
+    applyLayout(freeLocal);
+    state.x = anchor.x;
+    state.y = anchor.y;
+    computePeriod();
+  };
   applyLayout(from);
-  // Keep free-canvas period for the flight; list period is applied when tween ends
   render();
 }
 
@@ -357,8 +436,9 @@ function warpTiles() {
   const bioScaleFalloff = 0.12;
   const bioScaleFloor = 0.85;
   const bioBendAmt = 2.4;
-  const panX = state.x * blend;
-  const panY = state.y * blend;
+  // List mode: only vertical scroll is baked into tiles (column stays screen-centered)
+  const panX = state.stackMode && !tweening ? 0 : state.x * blend;
+  const panY = state.stackMode && !tweening ? state.y : state.y * blend;
   const tileZLift = 48 * blend;
 
   tiles.forEach((tile) => {
@@ -367,13 +447,23 @@ function warpTiles() {
     const rot = Number(tile.dataset.lrot) || 0;
     // During fly tween positions are absolute — wrapping with list period (w=1)
     // would snap every tile to the center before they can fly into the column
-    const lx = tweening ? baseX : wrapCoord(baseX, state.x, pw) + panX;
-    const ly = tweening ? baseY : wrapCoord(baseY, state.y, ph) + panY;
+    let lx;
+    let ly;
+    if (tweening) {
+      lx = baseX;
+      ly = baseY;
+    } else if (state.stackMode) {
+      lx = wrapCoord(baseX, 0, pw);
+      ly = wrapCoord(baseY, state.y, ph) + state.y;
+    } else {
+      lx = wrapCoord(baseX, state.x, pw) + panX;
+      ly = wrapCoord(baseY, state.y, ph) + panY;
+    }
 
-    const sx = tweening
+    const sx = tweening || state.stackMode
       ? cx + lx
       : cx + state.x * (1 - blend) + lx;
-    const sy = tweening
+    const sy = tweening || state.stackMode
       ? cy + ly
       : cy + state.y * (1 - blend) + ly;
     const dx = (sx - cx) / cx;
@@ -390,15 +480,20 @@ function warpTiles() {
   });
 
   if (bio) {
-    if (blend >= 0.999) {
-      // Match free-canvas rest pose exactly (z=0) — tiles are lifted in front
-      bio.style.transform = "translate3d(-50%, -50%, 0px)";
+    // Freeze intro where it was when list opened (or while flying in/out)
+    const freezeBio =
+      state.stackMode ||
+      state.layoutTween.active;
+    if (freezeBio) {
+      const ax = state.listAnchor.x;
+      const ay = state.listAnchor.y;
+      bio.style.transform = `translate3d(calc(-50% + ${ax.toFixed(2)}px), calc(-50% + ${ay.toFixed(2)}px), 0px)`;
       return;
     }
-    const lx = tweening ? 0 : wrapCoord(0, state.x, pw);
-    const ly = tweening ? 0 : wrapCoord(0, state.y, ph);
-    const sx = cx + (tweening ? 0 : state.x) + lx;
-    const sy = cy + (tweening ? 0 : state.y) + ly;
+    const lx = wrapCoord(0, state.x, pw);
+    const ly = wrapCoord(0, state.y, ph);
+    const sx = cx + state.x + lx;
+    const sy = cy + state.y + ly;
     const dx = (sx - cx) / cx;
     const dy = (sy - cy) / cy;
     const r2 = dx * dx + dy * dy;
@@ -414,8 +509,8 @@ function warpTiles() {
 function render() {
   const blend = stackBlend();
   const { tiltX, tiltY } = state.sphere;
-  // During the fly, keep the world still so lerped tile coords are screen-true
-  if (state.layoutTween.active) {
+  // List + fly: world stays still; tile coords are screen-true
+  if (state.layoutTween.active || state.stackMode) {
     world.style.transform = "translate3d(0, 0, 0)";
   } else {
     const panKeep = 1 - blend;
