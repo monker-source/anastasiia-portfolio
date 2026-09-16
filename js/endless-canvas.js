@@ -28,6 +28,14 @@ const state = {
   hitLink: null,
   hitTile: null,
   stackMode: false,
+  layoutTween: {
+    active: false,
+    t0: 0,
+    duration: 300,
+    from: null,
+    to: null,
+    toStack: false,
+  },
   period: { w: 3200, h: 2400 },
   sphere: { tiltX: 0, tiltY: 0, targetTiltX: 0, targetTiltY: 0 },
 };
@@ -36,6 +44,7 @@ const FRICTION = reducedMotion ? 0.82 : 0.925;
 const DRAG = 1;
 const MAX_TILT = 5.5;
 const MAX_DEPTH = 95;
+const LAYOUT_TWEEN_MS = 400;
 
 function wrapCoord(local, pan, period) {
   // Nearest replica of this item relative to the current view
@@ -61,7 +70,11 @@ function isMobileLayout() {
   return state.stackMode || window.innerWidth <= 700;
 }
 
-function setStackMode(on) {
+function easeOutCubic(t) {
+  return 1 - (1 - t) ** 3;
+}
+
+function setStackChrome(on) {
   state.stackMode = Boolean(on);
   document.body.classList.toggle("is-projects-stack", state.stackMode);
   const allBtn = document.querySelector(".site-all");
@@ -69,13 +82,32 @@ function setStackMode(on) {
     allBtn.setAttribute("aria-pressed", state.stackMode ? "true" : "false");
     allBtn.classList.toggle("is-active", state.stackMode);
   }
+  if (state.stackMode) hideHint();
+}
+
+function setStackMode(on) {
+  state.layoutTween.active = false;
+  setStackChrome(on);
   state.x = 0;
   state.y = 0;
   state.vx = 0;
   state.vy = 0;
   layoutTiles();
   render();
-  if (state.stackMode) hideHint();
+}
+
+function tileHeightAtWidth(tile, tileW) {
+  const img = tile.querySelector("img");
+  if (img?.naturalWidth) {
+    return tileW * (img.naturalHeight / img.naturalWidth);
+  }
+  const attrW = Number(img?.getAttribute("width"));
+  const attrH = Number(img?.getAttribute("height"));
+  if (attrW && attrH) return tileW * (attrH / attrW);
+  const curW = tile.offsetWidth;
+  const curH = tile.offsetHeight;
+  if (curW && curH) return tileW * (curH / curW);
+  return tileW * 0.65;
 }
 
 /** Mobile vertical strip: negative = gap between tiles (px). */
@@ -88,22 +120,20 @@ function mobileStackStep(height, spacing) {
   return height - spacing; // spacing negative → adds gap
 }
 
-function layoutTiles() {
+/** Compute per-tile layout for free canvas or stack/list mode (does not write DOM). */
+function computeLayout(forStack) {
   const hx = window.innerWidth / 2;
   const hy = window.innerHeight / 2;
-  const mobile = isMobileLayout();
-  // Large tiles relative to viewport so start view is mostly peeks
+  const useColumn = forStack || window.innerWidth <= 700;
   const base = Math.max(window.innerWidth, 900);
+  const layouts = tiles.map(() => ({ lx: 0, ly: 0, lrot: 0, width: 400 }));
 
-  if (mobile) {
-    // Keep intro clear; stack peeks above / below with fixed spacing
-    // Desktop ALL PROJECTS uses most of the width; real phones stay compact
-    const desktopStack = state.stackMode && window.innerWidth > 700;
+  if (useColumn) {
+    const desktopStack = forStack && window.innerWidth > 700;
     const tileW = desktopStack
       ? Math.min(window.innerWidth * 0.84, 1080)
       : Math.min(window.innerWidth * 0.92, 380);
     const spacing = MOBILE_TILE_SPACING;
-    // List view: tiles pass over the full-size intro (no reserved clear band)
     const bioGap = desktopStack
       ? 0
       : Math.max(window.innerHeight * 0.05, 22);
@@ -112,56 +142,152 @@ function layoutTiles() {
       : bio?.offsetHeight || Math.min(window.innerHeight * 0.55, 420);
     const clearHalf = bioH / 2 + bioGap;
 
-    tiles.forEach((tile) => {
+    tiles.forEach((tile, i) => {
       const rot = Number(tile.dataset.rot) || 0;
-      tile.style.width = `${tileW}px`;
-      tile.dataset.lx = "0";
-      tile.dataset.lrot = String(rot * 0.4);
+      layouts[i].width = tileW;
+      layouts[i].lx = 0;
+      layouts[i].lrot = rot * 0.4;
     });
 
     const above = tiles
-      .filter((t) => Number(t.dataset.oy) < 0)
-      .sort((a, b) => Number(b.dataset.oy) - Number(a.dataset.oy));
+      .map((t, i) => ({ tile: t, i }))
+      .filter(({ tile }) => Number(tile.dataset.oy) < 0)
+      .sort((a, b) => Number(b.tile.dataset.oy) - Number(a.tile.dataset.oy));
     let cursor = -clearHalf;
-    above.forEach((tile) => {
-      const h = tile.offsetHeight || tileW * 0.65;
+    above.forEach(({ tile, i }) => {
+      const h = tileHeightAtWidth(tile, tileW);
       const y = cursor - h / 2;
-      tile.dataset.ly = String(y);
+      layouts[i].ly = y;
       cursor = y - mobileStackStep(h, spacing) + h / 2;
     });
 
     const below = tiles
-      .filter((t) => Number(t.dataset.oy) >= 0)
-      .sort((a, b) => Number(a.dataset.oy) - Number(b.dataset.oy));
+      .map((t, i) => ({ tile: t, i }))
+      .filter(({ tile }) => Number(tile.dataset.oy) >= 0)
+      .sort((a, b) => Number(a.tile.dataset.oy) - Number(b.tile.dataset.oy));
     cursor = clearHalf;
-    below.forEach((tile) => {
-      const h = tile.offsetHeight || tileW * 0.65;
+    below.forEach(({ tile, i }) => {
+      const h = tileHeightAtWidth(tile, tileW);
       const y = cursor + h / 2;
-      tile.dataset.ly = String(y);
+      layouts[i].ly = y;
       cursor = y - h / 2 + mobileStackStep(h, spacing);
     });
   } else {
-    tiles.forEach((tile) => {
+    tiles.forEach((tile, i) => {
       const ox = Number(tile.dataset.ox);
       const oy = Number(tile.dataset.oy);
       const wf = Number(tile.dataset.wf);
       const rot = Number(tile.dataset.rot) || 0;
       const w = Math.min(530, Math.max(290, base * wf * 0.7));
-      const x = ox * hx;
-      const y = oy * hy;
-
-      tile.style.width = `${w}px`;
-      tile.dataset.lx = String(x);
-      tile.dataset.ly = String(y);
-      tile.dataset.lrot = String(rot);
+      layouts[i].width = w;
+      layouts[i].lx = ox * hx;
+      layouts[i].ly = oy * hy;
+      layouts[i].lrot = rot;
     });
   }
 
+  return layouts;
+}
+
+function applyLayout(layouts) {
+  tiles.forEach((tile, i) => {
+    const L = layouts[i];
+    tile.style.width = `${L.width}px`;
+    tile.dataset.lx = String(L.lx);
+    tile.dataset.ly = String(L.ly);
+    tile.dataset.lrot = String(L.lrot);
+  });
+}
+
+function layoutTiles() {
+  applyLayout(computeLayout(state.stackMode));
   computePeriod();
-  if (mobile) {
+  if (isMobileLayout()) {
     state.x = 0;
     state.vx = 0;
   }
+}
+
+function lerpLayout(from, to, u) {
+  return from.map((f, i) => {
+    const t = to[i];
+    return {
+      lx: f.lx + (t.lx - f.lx) * u,
+      ly: f.ly + (t.ly - f.ly) * u,
+      lrot: f.lrot + (t.lrot - f.lrot) * u,
+      width: f.width + (t.width - f.width) * u,
+    };
+  });
+}
+
+function snapshotLayouts() {
+  const tw = state.layoutTween;
+  if (tw.active && tw.from && tw.to) {
+    const u = easeOutCubic(
+      Math.min(1, (performance.now() - tw.t0) / tw.duration)
+    );
+    return lerpLayout(tw.from, tw.to, u);
+  }
+  // Visual positions (include pan) so mode switch does not jump
+  const { w: pw, h: ph } = state.period;
+  return tiles.map((tile) => ({
+    lx: wrapCoord(Number(tile.dataset.lx) || 0, state.x, pw) + state.x,
+    ly: wrapCoord(Number(tile.dataset.ly) || 0, state.y, ph) + state.y,
+    lrot: Number(tile.dataset.lrot) || 0,
+    width: parseFloat(tile.style.width) || tile.offsetWidth || 400,
+  }));
+}
+
+/** 0 = free canvas warp, 1 = list soft warp. Smooth across the layout tween. */
+function stackBlend() {
+  const tw = state.layoutTween;
+  if (tw.active && tw.from && tw.to) {
+    const u = easeOutCubic(
+      Math.min(1, (performance.now() - tw.t0) / Math.max(tw.duration, 1))
+    );
+    return tw.toStack ? u : 1 - u;
+  }
+  return state.stackMode ? 1 : 0;
+}
+
+function updateLayoutTween(now) {
+  const tw = state.layoutTween;
+  if (!tw.active || !tw.from || !tw.to) return;
+  const u = Math.min(1, (now - tw.t0) / tw.duration);
+  applyLayout(lerpLayout(tw.from, tw.to, easeOutCubic(u)));
+  // Skip period rebuild while flying — list period (w=1) would break mid-flight positions
+  if (u >= 1) {
+    tw.active = false;
+    applyLayout(tw.to);
+    computePeriod();
+  }
+}
+
+function toggleStackMode() {
+  const toStack = !state.stackMode;
+  if (reducedMotion) {
+    setStackMode(toStack);
+    return;
+  }
+
+  const from = snapshotLayouts();
+  setStackChrome(toStack);
+  state.x = 0;
+  state.y = 0;
+  state.vx = 0;
+  state.vy = 0;
+
+  const to = computeLayout(toStack);
+  state.layoutTween.active = true;
+  state.layoutTween.t0 = performance.now();
+  state.layoutTween.duration = LAYOUT_TWEEN_MS;
+  state.layoutTween.from = from;
+  state.layoutTween.to = to;
+  state.layoutTween.toStack = toStack;
+
+  applyLayout(from);
+  // Keep free-canvas period for the flight; list period is applied when tween ends
+  render();
 }
 
 function computePeriod() {
@@ -220,31 +346,36 @@ function warpTiles() {
   const cx = window.innerWidth / 2;
   const cy = window.innerHeight / 2;
   const { w: pw, h: ph } = state.period;
-  // List view keeps a soft sphere so identity stays, without collapsing width
-  const soft = state.stackMode;
-  const depthAmt = soft ? MAX_DEPTH * 0.38 : MAX_DEPTH;
-  const scaleFalloff = soft ? 0.08 : 0.22;
-  const scaleFloor = soft ? 0.92 : 0.75;
-  const bendAmt = soft ? 1.15 : 3.2;
+  const blend = stackBlend();
+  const tweening = state.layoutTween.active;
+  // Blend free ↔ list warp so both toggle directions feel the same
+  const depthAmt = MAX_DEPTH * (1 - 0.62 * blend);
+  const scaleFalloff = 0.22 + (0.08 - 0.22) * blend;
+  const scaleFloor = 0.75 + (0.92 - 0.75) * blend;
+  const bendAmt = 3.2 + (1.15 - 3.2) * blend;
   const bioDepthAmt = MAX_DEPTH * 0.45;
   const bioScaleFalloff = 0.12;
   const bioScaleFloor = 0.85;
   const bioBendAmt = 2.4;
-  // In list view the world stays put; pan is baked into tiles so intro can stay fixed
-  const panX = soft ? state.x : 0;
-  const panY = soft ? state.y : 0;
-  // Lift tiles toward camera so intro can sit at z=0 (same size/place as free view)
-  const tileZLift = soft ? 48 : 0;
+  const panX = state.x * blend;
+  const panY = state.y * blend;
+  const tileZLift = 48 * blend;
 
   tiles.forEach((tile) => {
     const baseX = Number(tile.dataset.lx);
     const baseY = Number(tile.dataset.ly);
     const rot = Number(tile.dataset.lrot) || 0;
-    const lx = wrapCoord(baseX, state.x, pw) + panX;
-    const ly = wrapCoord(baseY, state.y, ph) + panY;
+    // During fly tween positions are absolute — wrapping with list period (w=1)
+    // would snap every tile to the center before they can fly into the column
+    const lx = tweening ? baseX : wrapCoord(baseX, state.x, pw) + panX;
+    const ly = tweening ? baseY : wrapCoord(baseY, state.y, ph) + panY;
 
-    const sx = soft ? cx + lx : cx + state.x + lx;
-    const sy = soft ? cy + ly : cy + state.y + ly;
+    const sx = tweening
+      ? cx + lx
+      : cx + state.x * (1 - blend) + lx;
+    const sy = tweening
+      ? cy + ly
+      : cy + state.y * (1 - blend) + ly;
     const dx = (sx - cx) / cx;
     const dy = (sy - cy) / cy;
     const r2 = dx * dx + dy * dy;
@@ -259,15 +390,15 @@ function warpTiles() {
   });
 
   if (bio) {
-    if (soft) {
+    if (blend >= 0.999) {
       // Match free-canvas rest pose exactly (z=0) — tiles are lifted in front
       bio.style.transform = "translate3d(-50%, -50%, 0px)";
       return;
     }
-    const lx = wrapCoord(0, state.x, pw);
-    const ly = wrapCoord(0, state.y, ph);
-    const sx = cx + state.x + lx;
-    const sy = cy + state.y + ly;
+    const lx = tweening ? 0 : wrapCoord(0, state.x, pw);
+    const ly = tweening ? 0 : wrapCoord(0, state.y, ph);
+    const sx = cx + (tweening ? 0 : state.x) + lx;
+    const sy = cy + (tweening ? 0 : state.y) + ly;
     const dx = (sx - cx) / cx;
     const dy = (sy - cy) / cy;
     const r2 = dx * dx + dy * dy;
@@ -281,18 +412,20 @@ function warpTiles() {
 }
 
 function render() {
-  if (state.stackMode) {
-    // Keep world (and intro) still — only tiles carry the pan
+  const blend = stackBlend();
+  const { tiltX, tiltY } = state.sphere;
+  // During the fly, keep the world still so lerped tile coords are screen-true
+  if (state.layoutTween.active) {
     world.style.transform = "translate3d(0, 0, 0)";
   } else {
-    const { tiltX, tiltY } = state.sphere;
-    world.style.transform = `translate3d(${state.x}px, ${state.y}px, 0) rotateX(${tiltX.toFixed(3)}deg) rotateY(${tiltY.toFixed(3)}deg)`;
+    const panKeep = 1 - blend;
+    world.style.transform = `translate3d(${(state.x * panKeep).toFixed(2)}px, ${(state.y * panKeep).toFixed(2)}px, 0) rotateX(${(tiltX * panKeep).toFixed(3)}deg) rotateY(${(tiltY * panKeep).toFixed(3)}deg)`;
   }
   warpTiles();
 }
 
 function tick() {
-  if (!state.dragging) {
+  if (!state.dragging && !state.layoutTween.active) {
     state.x += state.vx;
     state.y += state.vy;
     state.vx *= FRICTION;
@@ -301,6 +434,7 @@ function tick() {
     if (Math.abs(state.vy) < 0.02) state.vy = 0;
   }
 
+  updateLayoutTween(performance.now());
   normalizePan();
   updateSphereFromVelocity();
   state.sphere.tiltX += (state.sphere.targetTiltX - state.sphere.tiltX) * 0.12;
@@ -316,7 +450,7 @@ function tick() {
 }
 
 function onPointerDown(e) {
-  if (state.transitioning) return;
+  if (state.transitioning || state.layoutTween.active) return;
   if (e.target.closest(".contact a, .site-brand, .site-all")) return;
   if (e.button !== undefined && e.button !== 0) return;
 
@@ -499,6 +633,7 @@ function onTileClick(e) {
 
 function onWheel(e) {
   e.preventDefault();
+  if (state.layoutTween.active) return;
   if (isMobileLayout()) {
     state.vy -= e.deltaY * 0.08;
   } else {
@@ -512,7 +647,7 @@ const allProjectsBtn = document.querySelector(".site-all");
 if (allProjectsBtn) {
   allProjectsBtn.addEventListener("click", (e) => {
     e.preventDefault();
-    setStackMode(!state.stackMode);
+    toggleStackMode();
   });
 }
 
@@ -533,8 +668,10 @@ requestAnimationFrame(tick);
 window.addEventListener(
   "load",
   () => {
-    layoutTiles();
-    render();
+    if (!state.layoutTween.active) {
+      layoutTiles();
+      render();
+    }
   },
   { once: true }
 );
@@ -547,6 +684,7 @@ stage.addEventListener("wheel", onWheel, { passive: false });
 stage.addEventListener("click", onTileClick);
 
 window.addEventListener("resize", () => {
+  state.layoutTween.active = false;
   layoutTiles();
   render();
 });
