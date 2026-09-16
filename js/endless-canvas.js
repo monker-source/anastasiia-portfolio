@@ -29,6 +29,7 @@ const state = {
   hitTile: null,
   stackMode: false,
   listAnchor: { x: 0, y: 0 },
+  listBioFreeze: null,
   layoutTween: {
     active: false,
     t0: 0,
@@ -76,6 +77,35 @@ function easeOutCubic(t) {
   return 1 - (1 - t) ** 3;
 }
 
+/** Snapshot intro screen place + spherical warp so list view does not resize it. */
+function captureBioFreeze(panX, panY) {
+  const pw = state.period.w;
+  const ph = state.period.h;
+  const lx = wrapCoord(0, panX, pw);
+  const ly = wrapCoord(0, panY, ph);
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  const sx = cx + panX + lx;
+  const sy = cy + panY + ly;
+  const dx = (sx - cx) / Math.max(cx, 1);
+  const dy = (sy - cy) / Math.max(cy, 1);
+  const r2 = dx * dx + dy * dy;
+  const dist = Math.min(1.2, Math.hypot(dx, dy));
+  return {
+    x: panX + lx,
+    y: panY + ly,
+    depth: Math.max(-MAX_DEPTH * 0.45, -r2 * MAX_DEPTH * 0.45),
+    bendX: dy * r2 * 2.4,
+    bendY: -dx * r2 * 2.4,
+    scale: Math.max(0.85, 1 - dist * 0.12),
+  };
+}
+
+function applyBioFreeze(freeze) {
+  if (!bio || !freeze) return;
+  bio.style.transform = `translate3d(calc(-50% + ${freeze.x.toFixed(2)}px), calc(-50% + ${freeze.y.toFixed(2)}px), ${freeze.depth.toFixed(2)}px) rotateX(${freeze.bendX.toFixed(2)}deg) rotateY(${freeze.bendY.toFixed(2)}deg) scale(${freeze.scale.toFixed(4)})`;
+}
+
 function setStackChrome(on) {
   state.stackMode = Boolean(on);
   document.body.classList.toggle("is-projects-stack", state.stackMode);
@@ -94,6 +124,9 @@ function setStackMode(on) {
   setStackChrome(on);
   if (on) {
     state.listAnchor = { x: state.x, y: state.y };
+    state.listBioFreeze = captureBioFreeze(state.x, state.y);
+  } else {
+    state.listBioFreeze = null;
   }
   state.x = on ? 0 : state.listAnchor.x;
   state.y = on ? 0 : state.listAnchor.y;
@@ -326,6 +359,7 @@ function toggleStackMode() {
   if (toStack) {
     // Remember where we were; freeze that as the list backdrop
     state.listAnchor = { x: state.x, y: state.y };
+    state.listBioFreeze = captureBioFreeze(state.x, state.y);
     setStackChrome(true);
     // List scroll starts at 0; column is built in screen space
     state.x = 0;
@@ -348,6 +382,8 @@ function toggleStackMode() {
 
   // Leave list → fly back to scattered places at the saved spot
   const anchor = { x: state.listAnchor.x, y: state.listAnchor.y };
+  // Keep listBioFreeze through the exit flight — clearing it early re-captures
+  // with the list period (w≈1) and snaps the intro to the wrong size/place.
   setStackChrome(false);
   const freeLocal = computeLayout(false);
   const to = visualLayoutsFromLocal(freeLocal, anchor);
@@ -363,6 +399,7 @@ function toggleStackMode() {
     applyLayout(freeLocal);
     state.x = anchor.x;
     state.y = anchor.y;
+    state.listBioFreeze = null;
     computePeriod();
   };
   applyLayout(from);
@@ -485,9 +522,8 @@ function warpTiles() {
       state.stackMode ||
       state.layoutTween.active;
     if (freezeBio) {
-      const ax = state.listAnchor.x;
-      const ay = state.listAnchor.y;
-      bio.style.transform = `translate3d(calc(-50% + ${ax.toFixed(2)}px), calc(-50% + ${ay.toFixed(2)}px), 0px)`;
+      // Never re-capture here: list period makes wrapCoord destroy the snapshot
+      if (state.listBioFreeze) applyBioFreeze(state.listBioFreeze);
       return;
     }
     const lx = wrapCoord(0, state.x, pw);

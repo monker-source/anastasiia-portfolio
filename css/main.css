@@ -122,7 +122,6 @@ body {
   transform: translate3d(-50%, -50%, 0);
   transform-style: preserve-3d;
   pointer-events: none;
-  transition: opacity 0.45s ease;
 }
 
 .bio {
@@ -134,6 +133,7 @@ body {
   line-height: 1.12;
   letter-spacing: -0.02em;
   text-wrap: pretty;
+  transition: opacity 0.45s ease;
 }
 
 .tile {
@@ -280,6 +280,11 @@ body.is-projects-stack .stage {
 
 body.is-projects-stack .bio-block {
   z-index: 0;
+}
+
+/* Fade the text node — not .bio-block — so opacity isn’t on the same
+   element as the 3D freeze transform (which can stop compositing after toggle). */
+body.is-projects-stack .bio {
   opacity: 0.38;
 }
 
