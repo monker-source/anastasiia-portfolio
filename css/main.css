@@ -122,6 +122,7 @@ body {
   transform: translate3d(-50%, -50%, 0);
   transform-style: preserve-3d;
   pointer-events: none;
+  transition: opacity 0.45s ease;
 }
 
 .bio {
@@ -279,6 +280,7 @@ body.is-projects-stack .stage {
 
 body.is-projects-stack .bio-block {
   z-index: 0;
+  opacity: 0.38;
 }
 
 body.is-projects-stack .tile {
