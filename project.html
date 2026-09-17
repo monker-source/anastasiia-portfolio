@@ -16,6 +16,11 @@
     />
     <link rel="stylesheet" href="./css/main.css?v=29" />
     <link rel="stylesheet" href="./css/project.css?v=16" />
+    <link
+      rel="preload"
+      as="image"
+      href="./archive/project%201/1.jpeg"
+    />
     <script>
       (function () {
         var entering = new URLSearchParams(location.search).has("enter");
@@ -136,7 +141,7 @@
             </figure>
             <figure class="slideshow__slide">
               <img
-                src="./archive/project%201/2b.jpg"
+                data-src="./archive/project%201/2b.jpg"
                 alt="Installation view 2 of 3"
                 loading="lazy"
                 draggable="false"
@@ -144,7 +149,7 @@
             </figure>
             <figure class="slideshow__slide">
               <img
-                src="./archive/project%201/2c.jpg"
+                data-src="./archive/project%201/2c.jpg"
                 alt="Installation view 3 of 3"
                 loading="lazy"
                 draggable="false"
@@ -187,7 +192,7 @@
           <div class="slideshow__viewport">
             <figure class="slideshow__slide is-active">
               <img
-                src="./archive/project%201/3a.png"
+                src="./archive/project%201/3a.jpg"
                 alt="Mapped panorama 1 of 3"
                 loading="lazy"
                 draggable="false"
@@ -195,7 +200,7 @@
             </figure>
             <figure class="slideshow__slide">
               <img
-                src="./archive/project%201/3b.png"
+                data-src="./archive/project%201/3b.jpg"
                 alt="Mapped panorama 2 of 3"
                 loading="lazy"
                 draggable="false"
@@ -203,7 +208,7 @@
             </figure>
             <figure class="slideshow__slide">
               <img
-                src="./archive/project%201/3c.png"
+                data-src="./archive/project%201/3c.jpg"
                 alt="Mapped panorama 3 of 3"
                 loading="lazy"
                 draggable="false"
@@ -235,8 +240,8 @@
       </div>
     </div>
 
-    <script type="module" src="./js/slideshow.js?v=3"></script>
+    <script type="module" src="./js/slideshow.js?v=5"></script>
     <script type="module" src="./js/project-canvas.js?v=22"></script>
-    <script type="module" src="./js/project-all.js?v=2"></script>
+    <script type="module" src="./js/project-all.js?v=3"></script>
   </body>
 </html>

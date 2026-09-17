@@ -82,7 +82,7 @@ export const PROJECTS = [
     rot: -2.7,
   },
   {
-    src: "./archive/previews/11.png",
+    src: "./archive/previews/11.jpg",
     alt: "Maps",
     w: 750,
     h: 421,

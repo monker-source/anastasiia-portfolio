@@ -2,6 +2,9 @@
  * Project media slideshows.
  * Files named like 2a / 2b / 2c are grouped into one carousel.
  * Click left half → previous, right half → next. Counter: 01 / 03.
+ *
+ * Inactive slides keep their URL in data-src so stacked/in-viewport
+ * carousels do not download every frame on first paint.
  */
 
 const initialized = new WeakSet();
@@ -10,28 +13,45 @@ function pad2(n) {
   return String(n).padStart(2, "0");
 }
 
-function preloadSlideImages(root) {
-  const imgs = [...root.querySelectorAll(".slideshow__slide img")];
-  imgs.forEach((img) => {
-    img.loading = "eager";
-    img.decoding = "async";
-    if (!img.complete && img.src) {
-      const warm = new Image();
-      warm.src = img.currentSrc || img.src;
+/** Move src → data-src for deferred slides (same-viewport lazy is unreliable). */
+function deferInactiveSlides(slides, activeIndex) {
+  slides.forEach((slide, i) => {
+    const img = slide.querySelector("img");
+    if (!img) return;
+    if (i === activeIndex) {
+      ensureSrc(img);
+      return;
+    }
+    if (img.src && !img.dataset.src) {
+      img.dataset.src = img.getAttribute("src") || img.src;
+      img.removeAttribute("src");
+      img.loading = "lazy";
     }
   });
-  return Promise.all(
-    imgs.map(
-      (img) =>
-        img.decode?.().catch(() => {}) ||
-        (img.complete
-          ? Promise.resolve()
-          : new Promise((resolve) => {
-              img.addEventListener("load", resolve, { once: true });
-              img.addEventListener("error", resolve, { once: true });
-            }))
-    )
-  );
+}
+
+function ensureSrc(img) {
+  if (!img) return;
+  const pending = img.dataset.src || img.getAttribute("data-src");
+  if (pending && !img.getAttribute("src")) {
+    img.src = pending;
+  }
+  img.decoding = "async";
+}
+
+function warmImage(img) {
+  if (!img) return;
+  ensureSrc(img);
+  if (!img.src) return;
+  if (img.complete) return;
+  const warm = new Image();
+  warm.src = img.currentSrc || img.src;
+}
+
+/** Prefetch only the next slide for snappy forward navigation. */
+function preloadNextSlide(slides, index) {
+  const next = slides[(index + 1) % slides.length];
+  warmImage(next?.querySelector("img"));
 }
 
 function lockViewportAspect(root) {
@@ -40,6 +60,8 @@ function lockViewportAspect(root) {
     root.querySelector(".slideshow__slide.is-active img") ||
     root.querySelector(".slideshow__slide img");
   if (!viewport || !probe) return;
+
+  ensureSrc(probe);
 
   const apply = () => {
     const w = probe.naturalWidth;
@@ -70,13 +92,18 @@ export function initSlideshow(root) {
     slides.findIndex((s) => s.classList.contains("is-active"))
   );
 
+  deferInactiveSlides(slides, index);
+
   const render = () => {
     slides.forEach((slide, i) => {
       slide.classList.toggle("is-active", i === index);
+      if (i === index) ensureSrc(slide.querySelector("img"));
     });
     if (counter) {
       counter.textContent = `${pad2(index + 1)} / ${pad2(slides.length)}`;
     }
+    preloadNextSlide(slides, index);
+    lockViewportAspect(root);
     window.dispatchEvent(new CustomEvent("project-media-change"));
   };
 
@@ -118,8 +145,6 @@ export function initSlideshow(root) {
 
   root.tabIndex = 0;
   root.classList.add("is-ready");
-  lockViewportAspect(root);
-  preloadSlideImages(root).then(() => lockViewportAspect(root));
   render();
 }
 

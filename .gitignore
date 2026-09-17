@@ -11,3 +11,6 @@ archive/README.md
 archive/external_links.txt
 archive/manifest.json
 archive/preloaded_state.json
+
+# Local image backups from load optimization
+archive/project 1/_orig/
