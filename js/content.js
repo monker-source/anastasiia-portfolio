@@ -28,7 +28,7 @@ export function projectHref(project) {
 
 export async function loadSite() {
   if (siteCache) return siteCache;
-  const res = await fetch(SITE_URL);
+  const res = await fetch(SITE_URL, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to load site settings (${res.status})`);
   siteCache = await res.json();
   return siteCache;
@@ -36,7 +36,7 @@ export async function loadSite() {
 
 export async function loadProjects() {
   if (projectsCache) return projectsCache;
-  const res = await fetch(PROJECTS_URL);
+  const res = await fetch(PROJECTS_URL, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to load projects (${res.status})`);
   const data = await res.json();
   projectsCache = Array.isArray(data.items) ? data.items : [];
