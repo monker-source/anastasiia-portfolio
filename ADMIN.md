@@ -38,6 +38,8 @@ Host on **Netlify** (static site + Identity):
 4. She opens `https://YOUR-SITE.netlify.app/admin/`, logs in, edits, and publishes.  
    Saves become Git commits; Netlify rebuilds/redeploys.
 
+Invite / confirm email links land on the homepage. `index.html` loads the Netlify Identity widget so the set-password modal opens; after login it sends you to `/admin/`.
+
 Without Netlify Identity, `/admin` on the live site will not accept logins. Local workflow above still works for you.
 
 ## What she can change
