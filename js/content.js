@@ -3,7 +3,7 @@
  */
 
 const INTRO_URL = new URL("../content/info/intro.json", import.meta.url);
-const BIO_URL = new URL("../content/info/bio.json", import.meta.url);
+const CONTACTS_URL = new URL("../content/info/contacts.json", import.meta.url);
 const PROJECTS_INDEX_URL = new URL("../data/projects-index.json", import.meta.url);
 
 let siteCache = null;
@@ -27,31 +27,25 @@ export function projectHref(project) {
   return `./project.html?slug=${encodeURIComponent(project.slug)}`;
 }
 
-function homepageCopy(introText, bioText) {
-  const parts = [introText, bioText]
-    .map((t) => (typeof t === "string" ? t.trim() : ""))
-    .filter(Boolean);
-  return parts.join("\n\n");
-}
-
 export async function loadSite() {
   if (siteCache) return siteCache;
-  const [introRes, bioRes] = await Promise.all([
+  const [introRes, contactsRes] = await Promise.all([
     fetch(INTRO_URL, { cache: "no-store" }),
-    fetch(BIO_URL, { cache: "no-store" }),
+    fetch(CONTACTS_URL, { cache: "no-store" }),
   ]);
   if (!introRes.ok) throw new Error(`Failed to load intro (${introRes.status})`);
-  if (!bioRes.ok) throw new Error(`Failed to load bio (${bioRes.status})`);
+  if (!contactsRes.ok) {
+    throw new Error(`Failed to load contacts (${contactsRes.status})`);
+  }
   const intro = await introRes.json();
-  const bio = await bioRes.json();
+  const contacts = await contactsRes.json();
   siteCache = {
-    intro: intro.text || "",
-    bio: bio.text || "",
-    artistName: bio.artistName || "",
-    email: bio.email || "",
-    phone: bio.phone || "",
-    phoneDisplay: bio.phoneDisplay || "",
-    cvUrl: bio.cvUrl || "",
+    bio: intro.text || "",
+    artistName: contacts.artistName || "",
+    email: contacts.email || "",
+    phone: contacts.phone || "",
+    phoneDisplay: contacts.phoneDisplay || "",
+    cvUrl: contacts.cvUrl || "",
   };
   return siteCache;
 }
@@ -89,9 +83,8 @@ export function applySiteChrome(site) {
   });
 
   const bioEl = document.getElementById("bio-text");
-  if (bioEl) {
-    const copy = homepageCopy(site.intro, site.bio);
-    if (copy) bioEl.textContent = copy;
+  if (bioEl && site.bio) {
+    bioEl.textContent = site.bio;
   }
 
   const email = document.querySelector("#contact-email a");

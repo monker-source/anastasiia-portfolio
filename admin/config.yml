@@ -25,20 +25,15 @@ collections:
         label: Intro text
         file: content/info/intro.json
         fields:
-          - label: Intro text
-            name: text
-            widget: text
-            required: false
-            hint: Optional short lead. Shown above the bio on the homepage.
-
-      - name: bio
-        label: Bio
-        file: content/info/bio.json
-        fields:
           - label: Bio
             name: text
             widget: text
-            hint: Main homepage text (shown under Intro when Intro is set).
+            hint: Homepage bio text shown in the center of the site.
+
+      - name: contacts
+        label: Contacts
+        file: content/info/contacts.json
+        fields:
           - label: Artist name
             name: artistName
             widget: string

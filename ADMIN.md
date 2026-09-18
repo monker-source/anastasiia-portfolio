@@ -6,8 +6,8 @@ Editors use **Decap** at `/admin/`.
 
 | Admin | Files | What it does |
 |-------|--------|----------------|
-| **Info → Intro text** | [`content/info/intro.json`](content/info/intro.json) | Optional short lead on the homepage |
-| **Info → Bio** | [`content/info/bio.json`](content/info/bio.json) | Main homepage text + name, email, phone, CV |
+| **Info → Intro text** | [`content/info/intro.json`](content/info/intro.json) | Homepage bio text |
+| **Info → Contacts** | [`content/info/contacts.json`](content/info/contacts.json) | Name, email, phone, CV |
 | **Projects** | [`content/projects/*.json`](content/projects/) | One file per project — the public site auto-collects them |
 
 There is **no** editable project list. Add / open / delete a project entry; after deploy, tiles update from how many project files exist.
