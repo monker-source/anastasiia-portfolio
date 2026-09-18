@@ -670,8 +670,11 @@ function flyToProject(tile, href) {
   const img = tile.querySelector("img");
   const rect = tile.getBoundingClientRect();
   const rot = Number(tile.dataset.lrot) || 0;
-  // Use the project hero asset so the handoff matches pixel-for-pixel
-  const projectSrc = new URL("./archive/project%201/1.jpeg", location.href).href;
+  // Prefer the project's hero (set on the tile link); fall back to preview
+  const linkHero = tile.querySelector("a.tile__link")?.dataset?.heroSrc;
+  const projectSrc = linkHero
+    ? new URL(linkHero, location.href).href
+    : img?.currentSrc || img?.src;
   const previewSrc = img?.currentSrc || img?.src;
   if (!previewSrc) {
     location.href = href;

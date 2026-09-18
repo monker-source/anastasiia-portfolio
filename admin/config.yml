@@ -1,0 +1,159 @@
+# Decap CMS — see ADMIN.md
+
+backend:
+  name: git-gateway
+  # Production publish branch on Netlify. Local decap-server writes the working tree.
+  branch: main
+
+local_backend:
+  url: http://localhost:8081/api/v1
+  allowed_hosts: ["127.0.0.1", "localhost"]
+
+media_folder: archive/uploads
+public_folder: /archive/uploads
+
+slug:
+  encoding: ascii
+  clean_accents: true
+  sanitize_replacement: "-"
+
+collections:
+  - name: site
+    label: Site
+    files:
+      - name: settings
+        label: Site settings
+        file: content/site.json
+        fields:
+          - label: Artist name
+            name: artistName
+            widget: string
+          - label: Bio
+            name: bio
+            widget: text
+          - label: Email
+            name: email
+            widget: string
+          - label: Phone
+            name: phone
+            widget: string
+            hint: Digits with + for tel link, e.g. +16085157994
+          - label: Phone display
+            name: phoneDisplay
+            widget: string
+            required: false
+            hint: Optional pretty label, e.g. +1 (608) 515-7994
+          - label: CV link
+            name: cvUrl
+            widget: string
+
+  - name: projects
+    label: Projects
+    files:
+      - name: projects
+        label: All projects
+        file: content/projects.json
+        fields:
+          - label: Projects
+            name: items
+            widget: list
+            summary: "{{title}}"
+            sortable: true
+            fields:
+              - label: Title
+                name: title
+                widget: string
+              - label: URL slug
+                name: slug
+                widget: string
+                hint: Used in project.html?slug= — lowercase, dashes only
+              - label: Published
+                name: published
+                widget: boolean
+                default: true
+              - label: Preview image
+                name: preview
+                widget: image
+              - label: Preview width
+                name: previewWidth
+                widget: number
+                value_type: int
+                default: 750
+              - label: Preview height
+                name: previewHeight
+                widget: number
+                value_type: int
+                default: 500
+              - label: Detail page
+                name: detail
+                widget: object
+                required: false
+                collapsed: true
+                hint: Fill these to make the preview open a full project page
+                fields:
+                  - label: Subhead
+                    name: subhead
+                    widget: text
+                    required: false
+                  - label: Body
+                    name: body
+                    widget: text
+                    required: false
+                  - label: Hero image
+                    name: hero
+                    widget: image
+                    required: false
+                  - label: Slideshows
+                    name: slideshows
+                    widget: list
+                    required: false
+                    summary: "{{label}}"
+                    fields:
+                      - label: Label
+                        name: label
+                        widget: string
+                      - label: Images
+                        name: images
+                        widget: list
+                        field:
+                          label: Image
+                          name: image
+                          widget: image
+                      - label: Horizontal offset
+                        name: ox
+                        widget: number
+                        value_type: float
+                        default: 0
+                        required: false
+                      - label: Width factor
+                        name: wf
+                        widget: number
+                        value_type: float
+                        default: 0.7
+                        required: false
+              - label: Canvas position
+                name: layout
+                widget: object
+                collapsed: true
+                hint: Homepage scatter — leave alone unless you know what you want
+                fields:
+                  - label: X
+                    name: ox
+                    widget: number
+                    value_type: float
+                    default: 0
+                  - label: Y
+                    name: oy
+                    widget: number
+                    value_type: float
+                    default: 0
+                  - label: Width factor
+                    name: wf
+                    widget: number
+                    value_type: float
+                    default: 0.4
+                  - label: Rotation deg
+                    name: rot
+                    widget: number
+                    value_type: float
+                    default: 0

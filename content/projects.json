@@ -1,0 +1,130 @@
+{
+  "items": [
+    {
+      "title": "Cartographic (Spatial) Struggle of Performing Corporeality",
+      "slug": "cartographic-spatial-struggle",
+      "published": true,
+      "preview": "/archive/previews/1.jpeg",
+      "previewWidth": 750,
+      "previewHeight": 422,
+      "layout": { "ox": -1.22, "oy": -1.15, "wf": 0.42, "rot": -3.2 },
+      "detail": {
+        "subhead": "Installation, Exhibited in “Part-Time Polyphony”: University of Wisconsin–Madison First-Year MFA Exhibition, USA, 2026",
+        "body": "A multi-screen installation featuring recordings of site-specific performances captured through 360° panoramic imaging and uploaded into Google Maps. Screen-recorded as navigable panoramas within the platform, the work places the performing body at the threshold between two systems of power: the disciplinary architecture of brutalist Belgrade and the soft infrastructural power of platform capitalism. The recurring glitch and distortion within each image and the dispersed, partially present body of the performer within mapped space mark the point where the platform establishes new embodied realities.",
+        "hero": "/archive/project 1/1.jpeg",
+        "slideshows": [
+          {
+            "label": "Installation views, set 1",
+            "ox": 0.34,
+            "wf": 0.7,
+            "images": [
+              "/archive/project 1/2a.jpg",
+              "/archive/project 1/2b.jpg",
+              "/archive/project 1/2c.jpg"
+            ]
+          },
+          {
+            "label": "Installation views, set 2",
+            "ox": -0.36,
+            "wf": 0.7,
+            "images": [
+              "/archive/project 1/3a.jpg",
+              "/archive/project 1/3b.jpg",
+              "/archive/project 1/3c.jpg"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "title": "Reals",
+      "slug": "reals",
+      "published": true,
+      "preview": "/archive/previews/2.jpg",
+      "previewWidth": 750,
+      "previewHeight": 422,
+      "layout": { "ox": 2.15, "oy": -1.85, "wf": 0.4, "rot": 2.4 }
+    },
+    {
+      "title": "The Hours That Hold the Figure and the Form",
+      "slug": "the-hours-that-hold-the-figure-and-the-form",
+      "published": true,
+      "preview": "/archive/previews/3.jpg",
+      "previewWidth": 750,
+      "previewHeight": 500,
+      "layout": { "ox": -2.4, "oy": 0.45, "wf": 0.4, "rot": 1.8 }
+    },
+    {
+      "title": "Dispersed Agency",
+      "slug": "dispersed-agency",
+      "published": true,
+      "preview": "/archive/previews/4.jpg",
+      "previewWidth": 750,
+      "previewHeight": 427,
+      "layout": { "ox": 1.28, "oy": 0.35, "wf": 0.41, "rot": -2.1 }
+    },
+    {
+      "title": "Pale Light",
+      "slug": "pale-light",
+      "published": true,
+      "preview": "/archive/previews/5.jpg",
+      "previewWidth": 750,
+      "previewHeight": 488,
+      "layout": { "ox": -1.95, "oy": 2.2, "wf": 0.39, "rot": 3.6 }
+    },
+    {
+      "title": "The Common Box",
+      "slug": "the-common-box",
+      "published": true,
+      "preview": "/archive/previews/6.jpg",
+      "previewWidth": 750,
+      "previewHeight": 423,
+      "layout": { "ox": 2.25, "oy": 2.35, "wf": 0.4, "rot": -1.4 }
+    },
+    {
+      "title": "Human Experience",
+      "slug": "human-experience",
+      "published": true,
+      "preview": "/archive/previews/7.JPG",
+      "previewWidth": 750,
+      "previewHeight": 563,
+      "layout": { "ox": -2.9, "oy": -0.95, "wf": 0.36, "rot": -4.1 }
+    },
+    {
+      "title": "I Talk 4Real",
+      "slug": "i-talk-4real",
+      "published": true,
+      "preview": "/archive/previews/8.jpg",
+      "previewWidth": 750,
+      "previewHeight": 500,
+      "layout": { "ox": 3.0, "oy": -0.7, "wf": 0.37, "rot": 2.8 }
+    },
+    {
+      "title": "Chains",
+      "slug": "chains",
+      "published": true,
+      "preview": "/archive/previews/9.jpg",
+      "previewWidth": 750,
+      "previewHeight": 532,
+      "layout": { "ox": -0.25, "oy": -1.2, "wf": 0.37, "rot": 1.2 }
+    },
+    {
+      "title": "Dark Nature",
+      "slug": "dark-nature",
+      "published": true,
+      "preview": "/archive/previews/10.jpg",
+      "previewWidth": 750,
+      "previewHeight": 478,
+      "layout": { "ox": 0.55, "oy": 2.7, "wf": 0.38, "rot": -2.7 }
+    },
+    {
+      "title": "Maps",
+      "slug": "maps",
+      "published": true,
+      "preview": "/archive/previews/11.jpg",
+      "previewWidth": 750,
+      "previewHeight": 421,
+      "layout": { "ox": 2.7, "oy": 1.45, "wf": 0.35, "rot": 4.0 }
+    }
+  ]
+}

@@ -3,10 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-      Cartographic (Spatial) Struggle of Performing Corporeality —
-      Anastasiia Bulatova
-    </title>
+    <title>Project — Anastasiia Bulatova</title>
     <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="./assets/favicon-32.png" type="image/png" sizes="32x32" />
     <link
@@ -16,11 +13,6 @@
     />
     <link rel="stylesheet" href="./css/main.css?v=29" />
     <link rel="stylesheet" href="./css/project.css?v=16" />
-    <link
-      rel="preload"
-      as="image"
-      href="./archive/project%201/1.jpeg"
-    />
     <script>
       (function () {
         var entering = new URLSearchParams(location.search).has("enter");
@@ -30,7 +22,6 @@
           window.__projectVtEnter = true;
           window.__projectVt = e.viewTransition;
           document.documentElement.classList.add("is-vt-enter");
-          // Size hero before the new-page snapshot so VT has no geometry pop
           try {
             var payload = JSON.parse(sessionStorage.getItem("projectEnter") || "null");
             var heroEl = document.querySelector("[data-hero]");
@@ -58,190 +49,21 @@
       >
       <div class="site-contacts">
         <p class="contact contact--cv" id="contact-cv">
-          <a
-            href="https://drive.google.com/file/d/1KTysE5t_Hx9AcqH9vFO-Sn3Zwta5cQ3z/view?usp=sharing"
-            target="_blank"
-            rel="noopener noreferrer"
-            >CV.pdf</a
-          >
+          <a href="#" target="_blank" rel="noopener noreferrer">CV.pdf</a>
         </p>
         <p class="contact contact--email" id="contact-email">
-          <a
-            href="mailto:anastasiiaabulatova@gmail.com"
-            aria-label="Email anastasiiaabulatova@gmail.com"
-            >mail</a
-          >
+          <a href="mailto:" aria-label="Email">mail</a>
         </p>
         <p class="contact contact--phone" id="contact-phone">
-          <a href="tel:+16085157994" aria-label="Call +1 (608) 515-7994"
-            >phone</a
-          >
+          <a href="tel:" aria-label="Phone">phone</a>
         </p>
       </div>
     </header>
 
     <div class="stage stage--project" id="stage" aria-label="Scroll project">
-      <div class="world" id="world">
-        <figure
-          class="project-tile project-tile--hero"
-          data-item
-          data-ox="0"
-          data-oy="0"
-          data-hero
-        >
-          <img
-            src="./archive/project%201/1.jpeg"
-            alt="Cartographic (Spatial) Struggle of Performing Corporeality"
-            width="1200"
-            height="675"
-            draggable="false"
-            loading="eager"
-          />
-        </figure>
-
-        <section class="project-copy" data-item data-ox="0" data-cluster="hero">
-          <h1 class="project__title">
-            Cartographic (Spatial) Struggle of Performing Corporeality
-          </h1>
-          <h2 class="project__subhead">
-            Installation, Exhibited in “Part-Time Polyphony”: University of
-            Wisconsin–Madison First-Year MFA Exhibition, USA, 2026
-          </h2>
-          <p class="project__body">
-            A multi-screen installation featuring recordings of site-specific
-            performances captured through 360° panoramic imaging and uploaded into
-            Google Maps. Screen-recorded as navigable panoramas within the
-            platform, the work places the performing body at the threshold between
-            two systems of power: the disciplinary architecture of brutalist
-            Belgrade and the soft infrastructural power of platform capitalism. The
-            recurring glitch and distortion within each image and the dispersed,
-            partially present body of the performer within mapped space mark the
-            point where the platform establishes new embodied realities.
-          </p>
-        </section>
-
-        <div
-          class="project-tile slideshow"
-          data-item
-          data-ox="0.34"
-          data-oy="2.25"
-          data-wf="0.7"
-          data-slideshow
-          aria-roledescription="carousel"
-          aria-label="Installation views, set 1"
-        >
-          <div class="slideshow__viewport">
-            <figure class="slideshow__slide is-active">
-              <img
-                src="./archive/project%201/2a.jpg"
-                alt="Installation view 1 of 3"
-                loading="eager"
-                draggable="false"
-              />
-            </figure>
-            <figure class="slideshow__slide">
-              <img
-                data-src="./archive/project%201/2b.jpg"
-                alt="Installation view 2 of 3"
-                loading="lazy"
-                draggable="false"
-              />
-            </figure>
-            <figure class="slideshow__slide">
-              <img
-                data-src="./archive/project%201/2c.jpg"
-                alt="Installation view 3 of 3"
-                loading="lazy"
-                draggable="false"
-              />
-            </figure>
-          </div>
-          <div class="slideshow__bar">
-            <button
-              type="button"
-              class="slideshow__hit slideshow__hit--prev"
-              data-slideshow-prev
-              aria-label="Previous slide"
-            ></button>
-            <p
-              class="slideshow__counter"
-              data-slideshow-counter
-              aria-live="polite"
-            >
-              01 / 03
-            </p>
-            <button
-              type="button"
-              class="slideshow__hit slideshow__hit--next"
-              data-slideshow-next
-              aria-label="Next slide"
-            ></button>
-          </div>
-        </div>
-
-        <div
-          class="project-tile slideshow"
-          data-item
-          data-ox="-0.36"
-          data-oy="3.4"
-          data-wf="0.7"
-          data-slideshow
-          aria-roledescription="carousel"
-          aria-label="Installation views, set 2"
-        >
-          <div class="slideshow__viewport">
-            <figure class="slideshow__slide is-active">
-              <img
-                src="./archive/project%201/3a.jpg"
-                alt="Mapped panorama 1 of 3"
-                loading="lazy"
-                draggable="false"
-              />
-            </figure>
-            <figure class="slideshow__slide">
-              <img
-                data-src="./archive/project%201/3b.jpg"
-                alt="Mapped panorama 2 of 3"
-                loading="lazy"
-                draggable="false"
-              />
-            </figure>
-            <figure class="slideshow__slide">
-              <img
-                data-src="./archive/project%201/3c.jpg"
-                alt="Mapped panorama 3 of 3"
-                loading="lazy"
-                draggable="false"
-              />
-            </figure>
-          </div>
-          <div class="slideshow__bar">
-            <button
-              type="button"
-              class="slideshow__hit slideshow__hit--prev"
-              data-slideshow-prev
-              aria-label="Previous slide"
-            ></button>
-            <p
-              class="slideshow__counter"
-              data-slideshow-counter
-              aria-live="polite"
-            >
-              01 / 03
-            </p>
-            <button
-              type="button"
-              class="slideshow__hit slideshow__hit--next"
-              data-slideshow-next
-              aria-label="Next slide"
-            ></button>
-          </div>
-        </div>
-      </div>
+      <div class="world" id="world"></div>
     </div>
 
-    <script type="module" src="./js/slideshow.js?v=5"></script>
-    <script type="module" src="./js/project-canvas.js?v=22"></script>
-    <script type="module" src="./js/project-all.js?v=3"></script>
+    <script type="module" src="./js/project-boot.js?v=1"></script>
   </body>
 </html>

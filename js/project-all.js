@@ -3,9 +3,10 @@
  * Freezes the project canvas underneath; does not navigate home.
  */
 
-import { PROJECTS } from "./projects-catalog.js";
+import { getProjectsCatalog } from "./projects-catalog.js";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let PROJECTS = [];
 const LAYOUT_TWEEN_MS = 500;
 const MOBILE_TILE_SPACING = -70;
 
@@ -398,21 +399,27 @@ function tickList() {
   requestAnimationFrame(tickList);
 }
 
-if (allBtn) {
-  allBtn.setAttribute("role", "button");
-  allBtn.setAttribute("aria-pressed", "false");
-  allBtn.addEventListener("click", toggleList);
+async function bootProjectAll() {
+  PROJECTS = await getProjectsCatalog();
+
+  if (allBtn) {
+    allBtn.setAttribute("role", "button");
+    allBtn.setAttribute("aria-pressed", "false");
+    allBtn.addEventListener("click", toggleList);
+  }
+
+  window.addEventListener("resize", () => {
+    if (!listState.open || listState.tween) return;
+    const column = computeColumnLayouts();
+    applyTileLayout(column);
+    computeListPeriod(column);
+    paintTiles();
+  });
+
+  requestAnimationFrame(tickList);
 }
 
-window.addEventListener("resize", () => {
-  if (!listState.open || listState.tween) return;
-  const column = computeColumnLayouts();
-  applyTileLayout(column);
-  computeListPeriod(column);
-  paintTiles();
-});
-
-requestAnimationFrame(tickList);
+bootProjectAll();
 
 export function isProjectAllOpen() {
   return listState.open;
