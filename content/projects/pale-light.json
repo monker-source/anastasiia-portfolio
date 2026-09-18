@@ -1,0 +1,15 @@
+{
+  "title": "Pale Light",
+  "slug": "pale-light",
+  "published": true,
+  "preview": "/archive/previews/5.jpg",
+  "previewWidth": 750,
+  "previewHeight": 488,
+  "layout": {
+    "ox": -1.95,
+    "oy": 2.2,
+    "wf": 0.39,
+    "rot": 3.6
+  },
+  "order": 5
+}

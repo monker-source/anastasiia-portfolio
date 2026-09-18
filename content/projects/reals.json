@@ -1,0 +1,15 @@
+{
+  "title": "Reals",
+  "slug": "reals",
+  "published": true,
+  "preview": "/archive/previews/2.jpg",
+  "previewWidth": 750,
+  "previewHeight": 422,
+  "layout": {
+    "ox": 2.15,
+    "oy": -1.85,
+    "wf": 0.4,
+    "rot": 2.4
+  },
+  "order": 2
+}

@@ -2,8 +2,9 @@
  * Load Decap-managed JSON and helpers for the public site.
  */
 
-const SITE_URL = new URL("../content/site.json", import.meta.url);
-const PROJECTS_URL = new URL("../content/projects.json", import.meta.url);
+const INTRO_URL = new URL("../content/info/intro.json", import.meta.url);
+const BIO_URL = new URL("../content/info/bio.json", import.meta.url);
+const PROJECTS_INDEX_URL = new URL("../data/projects-index.json", import.meta.url);
 
 let siteCache = null;
 let projectsCache = null;
@@ -26,20 +27,47 @@ export function projectHref(project) {
   return `./project.html?slug=${encodeURIComponent(project.slug)}`;
 }
 
+function homepageCopy(introText, bioText) {
+  const parts = [introText, bioText]
+    .map((t) => (typeof t === "string" ? t.trim() : ""))
+    .filter(Boolean);
+  return parts.join("\n\n");
+}
+
 export async function loadSite() {
   if (siteCache) return siteCache;
-  const res = await fetch(SITE_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to load site settings (${res.status})`);
-  siteCache = await res.json();
+  const [introRes, bioRes] = await Promise.all([
+    fetch(INTRO_URL, { cache: "no-store" }),
+    fetch(BIO_URL, { cache: "no-store" }),
+  ]);
+  if (!introRes.ok) throw new Error(`Failed to load intro (${introRes.status})`);
+  if (!bioRes.ok) throw new Error(`Failed to load bio (${bioRes.status})`);
+  const intro = await introRes.json();
+  const bio = await bioRes.json();
+  siteCache = {
+    intro: intro.text || "",
+    bio: bio.text || "",
+    artistName: bio.artistName || "",
+    email: bio.email || "",
+    phone: bio.phone || "",
+    phoneDisplay: bio.phoneDisplay || "",
+    cvUrl: bio.cvUrl || "",
+  };
   return siteCache;
 }
 
 export async function loadProjects() {
   if (projectsCache) return projectsCache;
-  const res = await fetch(PROJECTS_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to load projects (${res.status})`);
+  const res = await fetch(PROJECTS_INDEX_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to load projects index (${res.status})`);
   const data = await res.json();
-  projectsCache = Array.isArray(data.items) ? data.items : [];
+  const items = Array.isArray(data.items) ? data.items : [];
+  projectsCache = items.slice().sort((a, b) => {
+    const ao = Number.isFinite(Number(a.order)) ? Number(a.order) : 9999;
+    const bo = Number.isFinite(Number(b.order)) ? Number(b.order) : 9999;
+    if (ao !== bo) return ao - bo;
+    return String(a.title || "").localeCompare(String(b.title || ""));
+  });
   return projectsCache;
 }
 
@@ -60,8 +88,11 @@ export function applySiteChrome(site) {
     el.textContent = site.artistName || el.textContent;
   });
 
-  const bio = document.getElementById("bio-text");
-  if (bio && site.bio) bio.textContent = site.bio;
+  const bioEl = document.getElementById("bio-text");
+  if (bioEl) {
+    const copy = homepageCopy(site.intro, site.bio);
+    if (copy) bioEl.textContent = copy;
+  }
 
   const email = document.querySelector("#contact-email a");
   if (email && site.email) {
@@ -89,7 +120,7 @@ export function applySiteChrome(site) {
   }
 }
 
-/** Catalog shape used by ALL PROJECTS overlays. */
+/** Catalog shape used by ALL PROJECTS overlays (array already sorted by order). */
 export function toCatalogEntry(project) {
   const layout = project.layout || {};
   return {
@@ -100,6 +131,7 @@ export function toCatalogEntry(project) {
     h: project.previewHeight || 500,
     oy: layout.oy ?? 0,
     rot: layout.rot ?? 0,
+    order: Number.isFinite(Number(project.order)) ? Number(project.order) : 9999,
     slug: project.slug,
   };
 }

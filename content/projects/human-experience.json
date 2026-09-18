@@ -1,0 +1,15 @@
+{
+  "title": "Human Experience",
+  "slug": "human-experience",
+  "published": true,
+  "preview": "/archive/previews/7.JPG",
+  "previewWidth": 750,
+  "previewHeight": 563,
+  "layout": {
+    "ox": -2.9,
+    "oy": -0.95,
+    "wf": 0.36,
+    "rot": -4.1
+  },
+  "order": 7
+}

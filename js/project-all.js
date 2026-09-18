@@ -84,35 +84,16 @@ function computeColumnLayouts() {
     width: tileW,
   }));
 
+  // Stack in catalog order (sorted by project `order` field)
+  let cursor = 0;
   listState.tiles.forEach((tile, i) => {
     const rot = Number(tile.dataset.rot) || 0;
+    const h = tileHeightAtWidth(tile, tileW);
     layouts[i].width = tileW;
     layouts[i].lx = 0;
     layouts[i].lrot = rot * 0.4;
-  });
-
-  const above = listState.tiles
-    .map((t, i) => ({ tile: t, i }))
-    .filter(({ tile }) => Number(tile.dataset.oy) < 0)
-    .sort((a, b) => Number(b.tile.dataset.oy) - Number(a.tile.dataset.oy));
-  let cursor = 0;
-  above.forEach(({ tile, i }) => {
-    const h = tileHeightAtWidth(tile, tileW);
-    const y = cursor - h / 2;
-    layouts[i].ly = y;
-    cursor = y - mobileStackStep(h, spacing) + h / 2;
-  });
-
-  const below = listState.tiles
-    .map((t, i) => ({ tile: t, i }))
-    .filter(({ tile }) => Number(tile.dataset.oy) >= 0)
-    .sort((a, b) => Number(a.tile.dataset.oy) - Number(b.tile.dataset.oy));
-  cursor = 0;
-  below.forEach(({ tile, i }) => {
-    const h = tileHeightAtWidth(tile, tileW);
-    const y = cursor + h / 2;
-    layouts[i].ly = y;
-    cursor = y - h / 2 + mobileStackStep(h, spacing);
+    layouts[i].ly = cursor + h / 2;
+    cursor = layouts[i].ly - h / 2 + mobileStackStep(h, spacing);
   });
 
   return layouts;
@@ -126,13 +107,12 @@ function scatterFromLayouts(column) {
   const offY = hy + window.innerHeight * 0.55;
   return column.map((L, i) => {
     const tile = listState.tiles[i];
-    const oy = Number(tile.dataset.oy) || 0;
     const rot = Number(tile.dataset.rot) || 0;
-    const side = oy < 0 ? -1 : 1;
-    const spread = 0.55 + Math.abs(oy) * 0.35;
+    const side = i % 2 === 0 ? -1 : 1;
+    const spread = 0.55 + (i % 5) * 0.08;
     return {
       lx: side * offX * spread,
-      ly: L.ly + Math.sign(oy || side) * offY * (0.35 + Math.abs(oy) * 0.25),
+      ly: L.ly + side * offY * (0.35 + (i % 3) * 0.1),
       lrot: rot,
       width: Math.min(530, Math.max(290, L.width * 0.45)),
     };
@@ -220,6 +200,7 @@ function ensureLayer() {
     fig.className = "all-layer__tile tile";
     fig.dataset.oy = String(p.oy);
     fig.dataset.rot = String(p.rot);
+    fig.dataset.order = String(p.order ?? 9999);
     const img = document.createElement("img");
     img.src = p.src;
     img.alt = p.alt;

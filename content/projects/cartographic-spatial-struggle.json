@@ -1,0 +1,42 @@
+{
+  "title": "Cartographic (Spatial) Struggle of Performing Corporeality",
+  "slug": "cartographic-spatial-struggle",
+  "published": true,
+  "preview": "/archive/previews/1.jpeg",
+  "previewWidth": 750,
+  "previewHeight": 422,
+  "layout": {
+    "ox": -1.22,
+    "oy": -1.15,
+    "wf": 0.42,
+    "rot": -3.2
+  },
+  "detail": {
+    "subhead": "Installation, Exhibited in “Part-Time Polyphony”: University of Wisconsin–Madison First-Year MFA Exhibition, USA, 2026",
+    "body": "A multi-screen installation featuring recordings of site-specific performances captured through 360° panoramic imaging and uploaded into Google Maps. Screen-recorded as navigable panoramas within the platform, the work places the performing body at the threshold between two systems of power: the disciplinary architecture of brutalist Belgrade and the soft infrastructural power of platform capitalism. The recurring glitch and distortion within each image and the dispersed, partially present body of the performer within mapped space mark the point where the platform establishes new embodied realities.",
+    "hero": "/archive/project 1/1.jpeg",
+    "slideshows": [
+      {
+        "label": "Installation views, set 1",
+        "ox": 0.34,
+        "wf": 0.7,
+        "images": [
+          "/archive/project 1/2a.jpg",
+          "/archive/project 1/2b.jpg",
+          "/archive/project 1/2c.jpg"
+        ]
+      },
+      {
+        "label": "Installation views, set 2",
+        "ox": -0.36,
+        "wf": 0.7,
+        "images": [
+          "/archive/project 1/3a.jpg",
+          "/archive/project 1/3b.jpg",
+          "/archive/project 1/3c.jpg"
+        ]
+      }
+    ]
+  },
+  "order": 1
+}

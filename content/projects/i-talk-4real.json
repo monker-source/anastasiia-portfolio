@@ -1,0 +1,15 @@
+{
+  "title": "I Talk 4Real",
+  "slug": "i-talk-4real",
+  "published": true,
+  "preview": "/archive/previews/8.jpg",
+  "previewWidth": 750,
+  "previewHeight": 500,
+  "layout": {
+    "ox": 3,
+    "oy": -0.7,
+    "wf": 0.37,
+    "rot": 2.8
+  },
+  "order": 8
+}

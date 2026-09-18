@@ -1,0 +1,15 @@
+{
+  "title": "Dispersed Agency",
+  "slug": "dispersed-agency",
+  "published": true,
+  "preview": "/archive/previews/4.jpg",
+  "previewWidth": 750,
+  "previewHeight": 427,
+  "layout": {
+    "ox": 1.28,
+    "oy": 0.35,
+    "wf": 0.41,
+    "rot": -2.1
+  },
+  "order": 4
+}

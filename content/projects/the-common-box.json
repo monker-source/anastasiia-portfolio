@@ -1,0 +1,15 @@
+{
+  "title": "The Common Box",
+  "slug": "the-common-box",
+  "published": true,
+  "preview": "/archive/previews/6.jpg",
+  "previewWidth": 750,
+  "previewHeight": 423,
+  "layout": {
+    "ox": 2.25,
+    "oy": 2.35,
+    "wf": 0.4,
+    "rot": -1.4
+  },
+  "order": 6
+}

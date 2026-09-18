@@ -1,0 +1,15 @@
+{
+  "title": "Chains",
+  "slug": "chains",
+  "published": true,
+  "preview": "/archive/previews/9.jpg",
+  "previewWidth": 750,
+  "previewHeight": 532,
+  "layout": {
+    "ox": -0.25,
+    "oy": -1.2,
+    "wf": 0.37,
+    "rot": 1.2
+  },
+  "order": 9
+}

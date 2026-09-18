@@ -1,0 +1,15 @@
+{
+  "title": "Maps",
+  "slug": "maps",
+  "published": true,
+  "preview": "/archive/previews/11.jpg",
+  "previewWidth": 750,
+  "previewHeight": 421,
+  "layout": {
+    "ox": 2.7,
+    "oy": 1.45,
+    "wf": 0.35,
+    "rot": 4
+  },
+  "order": 11
+}

@@ -1,0 +1,15 @@
+{
+  "title": "The Hours That Hold the Figure and the Form",
+  "slug": "the-hours-that-hold-the-figure-and-the-form",
+  "published": true,
+  "preview": "/archive/previews/3.jpg",
+  "previewWidth": 750,
+  "previewHeight": 500,
+  "layout": {
+    "ox": -2.4,
+    "oy": 0.45,
+    "wf": 0.4,
+    "rot": 1.8
+  },
+  "order": 3
+}

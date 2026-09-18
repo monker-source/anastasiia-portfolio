@@ -1,0 +1,15 @@
+{
+  "title": "Dark Nature",
+  "slug": "dark-nature",
+  "published": true,
+  "preview": "/archive/previews/10.jpg",
+  "previewWidth": 750,
+  "previewHeight": 478,
+  "layout": {
+    "ox": 0.55,
+    "oy": 2.7,
+    "wf": 0.38,
+    "rot": -2.7
+  },
+  "order": 10
+}

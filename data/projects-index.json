@@ -7,7 +7,12 @@
       "preview": "/archive/previews/1.jpeg",
       "previewWidth": 750,
       "previewHeight": 422,
-      "layout": { "ox": -1.22, "oy": -1.15, "wf": 0.42, "rot": -3.2 },
+      "layout": {
+        "ox": -1.22,
+        "oy": -1.15,
+        "wf": 0.42,
+        "rot": -3.2
+      },
       "detail": {
         "subhead": "Installation, Exhibited in “Part-Time Polyphony”: University of Wisconsin–Madison First-Year MFA Exhibition, USA, 2026",
         "body": "A multi-screen installation featuring recordings of site-specific performances captured through 360° panoramic imaging and uploaded into Google Maps. Screen-recorded as navigable panoramas within the platform, the work places the performing body at the threshold between two systems of power: the disciplinary architecture of brutalist Belgrade and the soft infrastructural power of platform capitalism. The recurring glitch and distortion within each image and the dispersed, partially present body of the performer within mapped space mark the point where the platform establishes new embodied realities.",
@@ -34,7 +39,8 @@
             ]
           }
         ]
-      }
+      },
+      "order": 1
     },
     {
       "title": "Reals",
@@ -43,7 +49,13 @@
       "preview": "/archive/previews/2.jpg",
       "previewWidth": 750,
       "previewHeight": 422,
-      "layout": { "ox": 2.15, "oy": -1.85, "wf": 0.4, "rot": 2.4 }
+      "layout": {
+        "ox": 2.15,
+        "oy": -1.85,
+        "wf": 0.4,
+        "rot": 2.4
+      },
+      "order": 2
     },
     {
       "title": "The Hours That Hold the Figure and the Form",
@@ -52,7 +64,13 @@
       "preview": "/archive/previews/3.jpg",
       "previewWidth": 750,
       "previewHeight": 500,
-      "layout": { "ox": -2.4, "oy": 0.45, "wf": 0.4, "rot": 1.8 }
+      "layout": {
+        "ox": -2.4,
+        "oy": 0.45,
+        "wf": 0.4,
+        "rot": 1.8
+      },
+      "order": 3
     },
     {
       "title": "Dispersed Agency",
@@ -61,7 +79,13 @@
       "preview": "/archive/previews/4.jpg",
       "previewWidth": 750,
       "previewHeight": 427,
-      "layout": { "ox": 1.28, "oy": 0.35, "wf": 0.41, "rot": -2.1 }
+      "layout": {
+        "ox": 1.28,
+        "oy": 0.35,
+        "wf": 0.41,
+        "rot": -2.1
+      },
+      "order": 4
     },
     {
       "title": "Pale Light",
@@ -70,7 +94,13 @@
       "preview": "/archive/previews/5.jpg",
       "previewWidth": 750,
       "previewHeight": 488,
-      "layout": { "ox": -1.95, "oy": 2.2, "wf": 0.39, "rot": 3.6 }
+      "layout": {
+        "ox": -1.95,
+        "oy": 2.2,
+        "wf": 0.39,
+        "rot": 3.6
+      },
+      "order": 5
     },
     {
       "title": "The Common Box",
@@ -79,7 +109,13 @@
       "preview": "/archive/previews/6.jpg",
       "previewWidth": 750,
       "previewHeight": 423,
-      "layout": { "ox": 2.25, "oy": 2.35, "wf": 0.4, "rot": -1.4 }
+      "layout": {
+        "ox": 2.25,
+        "oy": 2.35,
+        "wf": 0.4,
+        "rot": -1.4
+      },
+      "order": 6
     },
     {
       "title": "Human Experience",
@@ -88,7 +124,13 @@
       "preview": "/archive/previews/7.JPG",
       "previewWidth": 750,
       "previewHeight": 563,
-      "layout": { "ox": -2.9, "oy": -0.95, "wf": 0.36, "rot": -4.1 }
+      "layout": {
+        "ox": -2.9,
+        "oy": -0.95,
+        "wf": 0.36,
+        "rot": -4.1
+      },
+      "order": 7
     },
     {
       "title": "I Talk 4Real",
@@ -97,7 +139,13 @@
       "preview": "/archive/previews/8.jpg",
       "previewWidth": 750,
       "previewHeight": 500,
-      "layout": { "ox": 3.0, "oy": -0.7, "wf": 0.37, "rot": 2.8 }
+      "layout": {
+        "ox": 3,
+        "oy": -0.7,
+        "wf": 0.37,
+        "rot": 2.8
+      },
+      "order": 8
     },
     {
       "title": "Chains",
@@ -106,7 +154,13 @@
       "preview": "/archive/previews/9.jpg",
       "previewWidth": 750,
       "previewHeight": 532,
-      "layout": { "ox": -0.25, "oy": -1.2, "wf": 0.37, "rot": 1.2 }
+      "layout": {
+        "ox": -0.25,
+        "oy": -1.2,
+        "wf": 0.37,
+        "rot": 1.2
+      },
+      "order": 9
     },
     {
       "title": "Dark Nature",
@@ -115,7 +169,13 @@
       "preview": "/archive/previews/10.jpg",
       "previewWidth": 750,
       "previewHeight": 478,
-      "layout": { "ox": 0.55, "oy": 2.7, "wf": 0.38, "rot": -2.7 }
+      "layout": {
+        "ox": 0.55,
+        "oy": 2.7,
+        "wf": 0.38,
+        "rot": -2.7
+      },
+      "order": 10
     },
     {
       "title": "Maps",
@@ -124,7 +184,13 @@
       "preview": "/archive/previews/11.jpg",
       "previewWidth": 750,
       "previewHeight": 421,
-      "layout": { "ox": 2.7, "oy": 1.45, "wf": 0.35, "rot": 4.0 }
+      "layout": {
+        "ox": 2.7,
+        "oy": 1.45,
+        "wf": 0.35,
+        "rot": 4
+      },
+      "order": 11
     }
   ]
 }

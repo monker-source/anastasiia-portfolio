@@ -18,19 +18,30 @@ slug:
   sanitize_replacement: "-"
 
 collections:
-  - name: site
-    label: Site
+  - name: info
+    label: Info
     files:
-      - name: settings
-        label: Site settings
-        file: content/site.json
+      - name: intro
+        label: Intro text
+        file: content/info/intro.json
         fields:
+          - label: Intro text
+            name: text
+            widget: text
+            required: false
+            hint: Optional short lead. Shown above the bio on the homepage.
+
+      - name: bio
+        label: Bio
+        file: content/info/bio.json
+        fields:
+          - label: Bio
+            name: text
+            widget: text
+            hint: Main homepage text (shown under Intro when Intro is set).
           - label: Artist name
             name: artistName
             widget: string
-          - label: Bio
-            name: bio
-            widget: text
           - label: Email
             name: email
             widget: string
@@ -49,111 +60,117 @@ collections:
 
   - name: projects
     label: Projects
-    files:
-      - name: projects
-        label: All projects
-        file: content/projects.json
+    label_singular: Project
+    folder: content/projects
+    create: true
+    delete: true
+    extension: json
+    format: json
+    slug: "{{fields.slug}}"
+    identifier_field: title
+    summary: "{{title}}"
+    sortable_fields: ["order", "title"]
+    fields:
+      - label: Title
+        name: title
+        widget: string
+      - label: URL slug
+        name: slug
+        widget: string
+        hint: Filename and project.html?slug= — lowercase, dashes only
+      - label: Published
+        name: published
+        widget: boolean
+        default: true
+      - label: Order
+        name: order
+        widget: number
+        value_type: int
+        default: 1
+        hint: ALL PROJECTS list order only (homepage still uses canvas position)
+      - label: Preview image
+        name: preview
+        widget: image
+      - label: Preview width
+        name: previewWidth
+        widget: number
+        value_type: int
+        default: 750
+      - label: Preview height
+        name: previewHeight
+        widget: number
+        value_type: int
+        default: 500
+      - label: Detail page
+        name: detail
+        widget: object
+        required: false
+        collapsed: true
+        hint: Fill these to make the preview open a full project page
         fields:
-          - label: Projects
-            name: items
+          - label: Subhead
+            name: subhead
+            widget: text
+            required: false
+          - label: Body
+            name: body
+            widget: text
+            required: false
+          - label: Hero image
+            name: hero
+            widget: image
+            required: false
+          - label: Slideshows
+            name: slideshows
             widget: list
-            summary: "{{title}}"
-            sortable: true
+            required: false
+            summary: "{{label}}"
             fields:
-              - label: Title
-                name: title
+              - label: Label
+                name: label
                 widget: string
-              - label: URL slug
-                name: slug
-                widget: string
-                hint: Used in project.html?slug= — lowercase, dashes only
-              - label: Published
-                name: published
-                widget: boolean
-                default: true
-              - label: Preview image
-                name: preview
-                widget: image
-              - label: Preview width
-                name: previewWidth
+              - label: Images
+                name: images
+                widget: list
+                field:
+                  label: Image
+                  name: image
+                  widget: image
+              - label: Horizontal offset
+                name: ox
                 widget: number
-                value_type: int
-                default: 750
-              - label: Preview height
-                name: previewHeight
-                widget: number
-                value_type: int
-                default: 500
-              - label: Detail page
-                name: detail
-                widget: object
+                value_type: float
+                default: 0
                 required: false
-                collapsed: true
-                hint: Fill these to make the preview open a full project page
-                fields:
-                  - label: Subhead
-                    name: subhead
-                    widget: text
-                    required: false
-                  - label: Body
-                    name: body
-                    widget: text
-                    required: false
-                  - label: Hero image
-                    name: hero
-                    widget: image
-                    required: false
-                  - label: Slideshows
-                    name: slideshows
-                    widget: list
-                    required: false
-                    summary: "{{label}}"
-                    fields:
-                      - label: Label
-                        name: label
-                        widget: string
-                      - label: Images
-                        name: images
-                        widget: list
-                        field:
-                          label: Image
-                          name: image
-                          widget: image
-                      - label: Horizontal offset
-                        name: ox
-                        widget: number
-                        value_type: float
-                        default: 0
-                        required: false
-                      - label: Width factor
-                        name: wf
-                        widget: number
-                        value_type: float
-                        default: 0.7
-                        required: false
-              - label: Canvas position
-                name: layout
-                widget: object
-                collapsed: true
-                hint: Homepage scatter — leave alone unless you know what you want
-                fields:
-                  - label: X
-                    name: ox
-                    widget: number
-                    value_type: float
-                    default: 0
-                  - label: Y
-                    name: oy
-                    widget: number
-                    value_type: float
-                    default: 0
-                  - label: Width factor
-                    name: wf
-                    widget: number
-                    value_type: float
-                    default: 0.4
-                  - label: Rotation deg
-                    name: rot
-                    widget: number
-                    value_type: float
-                    default: 0
+              - label: Width factor
+                name: wf
+                widget: number
+                value_type: float
+                default: 0.7
+                required: false
+      - label: Canvas position
+        name: layout
+        widget: object
+        collapsed: true
+        hint: Homepage scatter — leave alone unless you know what you want
+        fields:
+          - label: X
+            name: ox
+            widget: number
+            value_type: float
+            default: 0
+          - label: Y
+            name: oy
+            widget: number
+            value_type: float
+            default: 0
+          - label: Width factor
+            name: wf
+            widget: number
+            value_type: float
+            default: 0.4
+          - label: Rotation deg
+            name: rot
+            widget: number
+            value_type: float
+            default: 0

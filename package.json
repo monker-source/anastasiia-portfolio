@@ -2,7 +2,8 @@
   "name": "anastasiia-portfolio",
   "private": true,
   "scripts": {
-    "start": "npx --yes serve -p 5173",
+    "build": "node scripts/build-content-index.js",
+    "start": "npm run build && npx --yes serve -p 5173",
     "cms": "npx --yes decap-server",
     "admin": "npx --yes concurrently -k \"npm run start\" \"npm run cms\""
   }
